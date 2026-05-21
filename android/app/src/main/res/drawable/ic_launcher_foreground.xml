@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Croix dorée centrée -->
+    <path
+        android:fillColor="#C8A84B"
+        android:pathData="M44,20 L64,20 L64,44 L88,44 L88,64 L64,64 L64,88 L44,88 L44,64 L20,64 L20,44 L44,44 Z"/>
+</vector>
