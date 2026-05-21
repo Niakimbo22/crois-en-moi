@@ -106,6 +106,29 @@
             display: none; z-index: 400;
         }
 
+        /* Nav items */
+        .nav-item {
+            padding: 14px 12px;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-item:hover { background: var(--accent-muted); }
+        .nav-item.active {
+            background: var(--accent-muted);
+            color: var(--accent);
+            border-left-color: var(--accent);
+            font-weight: 700;
+        }
+        .nav-item.active .nav-dot {
+            display: block;
+        }
+
         /* Screens */
         .screens-container { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .screen { display: none; padding: 20px; padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
@@ -201,6 +224,15 @@
             color: var(--fg); padding: 8px; cursor: pointer;
         }
 
+        /* Header breadcrumb */
+        .header-screen-label {
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
         .version-footer {
             text-align: center;
             margin-top: 40px;
@@ -224,7 +256,10 @@
             <button class="menu-icon-btn" onclick="toggleDrawer()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <div class="serif" style="font-size: 20px; font-weight:700; color:var(--accent);">Crois en Moi</div>
+            <div style="display:flex; flex-direction:column; align-items:center;">
+                <div class="serif" style="font-size: 20px; font-weight:700; color:var(--accent);">Crois en Moi</div>
+                <div class="header-screen-label" id="header-screen-label"></div>
+            </div>
             <div style="width:40px;"></div>
         </header>
 
@@ -232,12 +267,12 @@
         <div class="drawer" id="drawer">
             <div class="serif" style="font-size: 24px; color: var(--accent); margin-bottom: 32px; font-weight: 700;">Crois en Moi</div>
             <div style="display:flex; flex-direction:column; gap:4px;">
-                <div onclick="showScreen('home')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">🏠 Accueil</div>
-                <div onclick="showScreen('chapelet')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">📿 Chapelet Guidé</div>
-                <div onclick="showScreen('prayers')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">📖 Bibliothèque</div>
-                <div onclick="showScreen('chants')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">🎶 Chants de Messe</div>
-                <div onclick="showScreen('trinity')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">✨ La Trinité</div>
-                <div onclick="showScreen('confession')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">⛪ Confession</div>
+                <div class="nav-item" data-screen="home" onclick="showScreen('home')">🏠 Accueil</div>
+                <div class="nav-item" data-screen="chapelet" onclick="showScreen('chapelet')">📿 Chapelet Guidé</div>
+                <div class="nav-item" data-screen="prayers" onclick="showScreen('prayers')">📖 Bibliothèque</div>
+                <div class="nav-item" data-screen="chants" onclick="showScreen('chants')">🎶 Chants de Messe</div>
+                <div class="nav-item" data-screen="trinity" onclick="showScreen('trinity')">✨ La Trinité</div>
+                <div class="nav-item" data-screen="confession" onclick="showScreen('confession')">⛪ Confession</div>
             </div>
             <button class="btn-theme" onclick="toggleTheme()">🌓 Changer de thème</button>
         </div>
@@ -425,7 +460,7 @@
                 </div>
             </div>
 
-            <div class="version-footer">Crois en Moi — Version 2.0</div>
+            <div class="version-footer">Crois en Moi — Version 2.1</div>
 
         </div>
     </div>
@@ -506,10 +541,18 @@
             "10-1": "Toussaint", "11-25": "Noël — La Nativité"
         };
 
+        // Screen labels for header
+        const SCREEN_LABELS = {
+            home: '', chapelet: 'Chapelet Guidé', prayers: 'Bibliothèque',
+            chants: 'Chants de Messe', trinity: 'La Trinité',
+            confession: 'Confession', 'prayer-detail': ''
+        };
+
         // --- STATE ---
         let rosaryState = { type: 'joyful', decade: 0, step: 0 };
         let currentFilter = 'all';
         let detailFrom = 'prayers';
+        let currentScreen = 'home';
 
         // --- CORE ---
         function closeSplash() {
@@ -530,6 +573,17 @@
             document.getElementById('drawer').classList.remove('open');
             document.getElementById('overlay').style.display = 'none';
             document.querySelector('.screens-container').scrollTop = 0;
+
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.screen === id);
+            });
+
+            // Update header label
+            const label = SCREEN_LABELS[id] || '';
+            document.getElementById('header-screen-label').textContent = label;
+
+            currentScreen = id;
             if (id === 'chapelet') initRosary();
         }
 
@@ -676,6 +730,8 @@
             initLiturgical();
             renderPrayers();
             renderChants();
+            // Mark home as active on load
+            showScreen('home');
             setTimeout(closeSplash, 2500);
         };
     </script>
