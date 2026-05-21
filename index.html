@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+    <title>Crois en Moi - Application Catholique</title>
+    <style>
+        :root {
+            --bg: oklch(99% 0.002 240);
+            --surface: oklch(100% 0 0);
+            --fg: oklch(18% 0.012 250);
+            --muted: oklch(54% 0.012 250);
+            --border: oklch(92% 0.005 250);
+            --accent: oklch(75% 0.12 85); /* Vatican Gold */
+            --accent-muted: oklch(92% 0.03 85);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', system-ui, sans-serif;
+            --font-serif: 'Iowan Old Style', 'Charter', Georgia, serif;
+            --header-height: 64px;
+
+            /* Liturgical Colors */
+            --lit-green: oklch(60% 0.15 150);
+            --lit-violet: oklch(50% 0.15 300);
+            --lit-white: oklch(95% 0.02 85);
+            --lit-red: oklch(55% 0.18 25);
+        }
+
+        [data-theme="dark"] {
+            --bg: oklch(15% 0.01 250);
+            --surface: oklch(20% 0.01 250);
+            --fg: oklch(95% 0.01 250);
+            --muted: oklch(70% 0.01 250);
+            --border: oklch(25% 0.01 250);
+            --accent: oklch(80% 0.12 85);
+            --accent-muted: oklch(25% 0.05 85);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            font-family: var(--font-sans);
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .serif { font-family: var(--font-serif); }
+
+        /* Splash Screen */
+        #splash {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+            cursor: pointer;
+        }
+        .splash-logo { font-size: 80px; margin-bottom: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+        /* Navigation */
+        .app-shell { display: flex; flex-direction: column; height: 100vh; }
+        header {
+            height: calc(var(--header-height) + env(safe-area-inset-top));
+            padding-top: env(safe-area-inset-top);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-inline: 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0; left: -100%;
+            width: 80%; max-width: 300px; height: 100%;
+            background: var(--surface);
+            z-index: 500;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            padding-top: calc(24px + env(safe-area-inset-top));
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+        .drawer.open { left: 0; }
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: none; z-index: 400;
+        }
+
+        /* Screens */
+        .screens-container { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .screen { display: none; padding: 20px; padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+        .screen.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Cards & Content */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; cursor: pointer; }
+        .accent-box { background: linear-gradient(135deg, var(--accent-muted), var(--surface)); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 20px; border: 1px solid var(--border); }
+        .btn-theme { margin-top: auto; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--fg); cursor: pointer; text-align: center; font-weight: 600; }
+
+        .category-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            margin: 28px 0 12px 4px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0 16px;
+            scrollbar-width: none;
+        }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .filter-chip {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-chip.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .prayer-text { font-family: var(--font-serif); font-size: 19px; line-height: 1.7; white-space: pre-line; text-align: center; }
+        .faq-item { margin-bottom: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; }
+        .faq-q { font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+        .faq-a { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+        /* Rosary Styles */
+        .rosary-container { text-align: center; padding: 20px 0; }
+        .rosary-mystery { font-family: var(--font-serif); font-size: 24px; color: var(--accent); margin-bottom: 8px; }
+        .rosary-prayer-name { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; margin-bottom: 20px; color: var(--muted); }
+        .rosary-counter { font-size: 48px; font-weight: 200; margin: 20px 0; }
+        .rosary-controls { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
+        .btn-circle {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 24px;
+        }
+        .btn-circle:active { transform: scale(0.9); background: var(--accent-muted); }
+        .btn-circle:disabled { opacity: 0.3; cursor: default; }
+
+        /* Liturgical Colors */
+        .lit-season-card { border-left: 6px solid var(--lit-color, var(--accent)); padding-left: 12px; }
+
+        /* Trinity diagram */
+        .trinity-circle {
+            width: 200px; height: 200px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            margin: 30px auto;
+        }
+        .trinity-label {
+            position: absolute;
+            background: var(--bg);
+            padding: 4px 8px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .menu-icon-btn {
+            background: none; border: none;
+            color: var(--fg); padding: 8px; cursor: pointer;
+        }
+
+        .version-footer {
+            text-align: center;
+            margin-top: 40px;
+            opacity: 0.4;
+            font-size: 12px;
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splash" onclick="closeSplash()">
+        <div class="splash-logo">✝️</div>
+        <div class="serif" style="font-size: 24px; color: var(--accent);">Crois en Moi</div>
+        <div style="font-size: 12px; color: var(--muted); margin-top: 20px; text-transform:uppercase; letter-spacing:1px;">Touchez pour commencer</div>
+    </div>
+
+    <div class="app-shell">
+        <header>
+            <button class="menu-icon-btn" onclick="toggleDrawer()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div class="serif" style="font-size: 20px; font-weight:700; color:var(--accent);">Crois en Moi</div>
+            <div style="width:40px;"></div>
+        </header>
+
+        <div class="overlay" id="overlay" onclick="toggleDrawer()"></div>
+        <div class="drawer" id="drawer">
+            <div class="serif" style="font-size: 24px; color: var(--accent); margin-bottom: 32px; font-weight: 700;">Crois en Moi</div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <div onclick="showScreen('home')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">🏠 Accueil</div>
+                <div onclick="showScreen('chapelet')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">📿 Chapelet Guidé</div>
+                <div onclick="showScreen('prayers')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">📖 Bibliothèque</div>
+                <div onclick="showScreen('chants')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">🎶 Chants de Messe</div>
+                <div onclick="showScreen('trinity')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">✨ La Trinité</div>
+                <div onclick="showScreen('confession')" style="padding:14px 12px; cursor:pointer; font-weight:600; border-radius:8px; transition:background 0.2s;">⛪ Confession</div>
+            </div>
+            <button class="btn-theme" onclick="toggleTheme()">🌓 Changer de thème</button>
+        </div>
+
+        <div class="screens-container">
+
+            <!-- HOME -->
+            <div id="home" class="screen active">
+                <h2 class="serif" style="margin-top:4px;">Bonjour en Christ,</h2>
+                <p style="color:var(--muted); margin-top:-10px;">Que la paix du Seigneur soit avec toi.</p>
+
+                <!-- Liturgical Card -->
+                <div class="card lit-season-card" id="liturgical-card">
+                    <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:4px;">Calendrier Liturgique</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div id="lit-season-name" style="font-weight:700; font-size:18px;">Chargement...</div>
+                            <div id="lit-saint" style="font-size:13px; color:var(--muted);">Saint du jour</div>
+                        </div>
+                        <div id="lit-color-dot" style="width:14px; height:14px; border-radius:50%; background:var(--accent);"></div>
+                    </div>
+                </div>
+
+                <div class="accent-box">
+                    <div style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--accent); margin-bottom:8px;">Verset du jour</div>
+                    <div class="serif" style="font-size:18px; line-height:1.4;">"Je peux tout en Celui qui me fortifie."</div>
+                    <div style="font-size:11px; margin-top:8px; opacity:0.7;">PHILIPPIENS 4:13</div>
+                </div>
+
+                <div class="card" onclick="window.open('https://www.google.com/maps/search/église+catholique+near+me', '_blank', 'noopener,noreferrer')">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="font-size:28px;">📍</div>
+                        <div>
+                            <div style="font-weight:700;">Trouver une église près de moi</div>
+                            <div style="font-size:12px; color:var(--muted);">Localiser les lieux de culte via Maps.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" onclick="showScreen('chapelet')">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="font-size:28px;">📿</div>
+                        <div>
+                            <div style="font-weight:700;">Commencer le Chapelet</div>
+                            <div style="font-size:12px; color:var(--muted);">Prier les mystères du jour pas à pas.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" onclick="showScreen('trinity')">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="font-size:28px;">✨</div>
+                        <div>
+                            <div style="font-weight:700;">Mystère de la Trinité</div>
+                            <div style="font-size:12px; color:var(--muted);">Découvrez le Père, le Fils et l'Esprit.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHAPELET GUIDÉ -->
+            <div id="chapelet" class="screen">
+                <h2 class="serif" style="margin-top:4px;">Chapelet Guidé</h2>
+                <div class="card" id="rosary-info-card">
+                    <div id="rosary-day-label" style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--muted);">Mystères du jour</div>
+                    <div id="rosary-type" style="font-weight:700; font-size:18px; color:var(--accent);">Mystères Joyeux</div>
+                </div>
+
+                <div class="rosary-container">
+                    <div id="rosary-mystery-name" class="rosary-mystery">1. L'Annonciation</div>
+                    <div id="rosary-prayer-name" class="rosary-prayer-name">NOTRE PÈRE</div>
+                    <div class="rosary-counter" id="rosary-step-counter">Intro</div>
+                    <div style="font-size:12px; color:var(--muted);" id="rosary-progress">Dizaine 1 / 5</div>
+
+                    <div class="rosary-controls">
+                        <button class="btn-circle" onclick="rosaryPrev()" id="rosary-prev">‹</button>
+                        <button class="btn-circle" onclick="rosaryNext()" id="rosary-next">›</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:20px;">
+                    <div id="rosary-prayer-text" style="font-size:14px; line-height:1.6; font-style:italic; color:var(--muted); text-align:center;">
+                        "Notre Père qui es aux cieux..."
+                    </div>
+                </div>
+            </div>
+
+            <!-- BIBLIOTHÈQUE -->
+            <div id="prayers" class="screen">
+                <h2 class="serif" style="margin-top:4px;">Bibliothèque</h2>
+
+                <div class="filter-bar">
+                    <div class="filter-chip active" onclick="filterPrayers('all', this)">Toutes</div>
+                    <div class="filter-chip" onclick="filterPrayers('matin', this)">Matin</div>
+                    <div class="filter-chip" onclick="filterPrayers('soir', this)">Soir</div>
+                    <div class="filter-chip" onclick="filterPrayers('marie', this)">Marie</div>
+                    <div class="filter-chip" onclick="filterPrayers('louange', this)">Louange</div>
+                    <div class="filter-chip" onclick="filterPrayers('penitence', this)">Pénitence</div>
+                    <div class="filter-chip" onclick="filterPrayers('intercession', this)">Intercession</div>
+                </div>
+
+                <div id="prayer-categories"></div>
+            </div>
+
+            <!-- CHANTS DE MESSE -->
+            <div id="chants" class="screen">
+                <h2 class="serif" style="margin-top:4px;">Répertoire de Chants</h2>
+                <p style="color:var(--muted); margin-bottom:20px;">Paroles et significations des chants de l'Ordinaire de la Messe.</p>
+                <div id="chants-list"></div>
+            </div>
+
+            <!-- PRAYER DETAIL -->
+            <div id="prayer-detail" class="screen">
+                <button onclick="backToLibrary()" style="background:none; border:none; color:var(--accent); font-weight:700; margin-bottom:20px; cursor:pointer; padding:0; font-size:16px;">← Retour</button>
+                <h1 id="detail-title" class="serif" style="text-align:center; color:var(--accent);"></h1>
+                <div id="detail-text" class="prayer-text"></div>
+                <div class="card" style="margin-top:40px;">
+                    <h4 style="margin:0 0 8px; font-size:12px; text-transform:uppercase; color:var(--accent);">Histoire & Sens</h4>
+                    <p id="detail-history" style="font-size:14px; color:var(--muted); line-height:1.5; margin:0;"></p>
+                </div>
+            </div>
+
+            <!-- LA TRINITÉ -->
+            <div id="trinity" class="screen">
+                <h2 class="serif" style="color:var(--accent); margin-top:4px;">La Sainte Trinité</h2>
+                <p style="line-height:1.6;">Le mystère d'un seul Dieu en trois personnes distinctes.</p>
+
+                <div class="trinity-circle">
+                    <div class="trinity-label" style="top:-14px;">LE PÈRE</div>
+                    <div class="trinity-label" style="bottom:-14px; left:-24px;">LE FILS</div>
+                    <div class="trinity-label" style="bottom:-14px; right:-28px;">L'ESPRIT</div>
+                    <div class="serif" style="font-size:24px; color:var(--accent);">DIEU</div>
+                </div>
+
+                <h3 class="serif">Questions fréquentes</h3>
+                <div class="faq-item">
+                    <div class="faq-q">Comment 1+1+1 peut faire 1 ?</div>
+                    <div class="faq-a">Ce n'est pas une équation mathématique mais une relation d'amour infinie. Comme le soleil (Père), sa lumière (Fils) et sa chaleur (Esprit) : ils sont distincts mais font un seul soleil.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">L'Esprit Saint est-il une personne ?</div>
+                    <div class="faq-a">Oui, c'est l'Amour vivant entre le Père et le Fils. Il n'est pas une force, mais Quelqu'un qui habite en nous pour nous guider.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Pourquoi aller à la Messe ?</div>
+                    <div class="faq-a">C'est la réunion de la famille de Dieu. On y reçoit l'Eucharistie, le corps du Christ, pour avoir la force de vivre en chrétien.</div>
+                </div>
+            </div>
+
+            <!-- CONFESSION -->
+            <div id="confession" class="screen">
+                <h2 class="serif" style="margin-top:4px;">Confession</h2>
+                <p style="color:var(--muted);">Préparer son examen de conscience.</p>
+
+                <div class="card">
+                    <div style="font-weight:700; color:var(--accent); margin-bottom:10px;">Examen de conscience</div>
+                    <div style="font-size:14px; line-height:1.8;">
+                        ☐ Ai-je manqué de respect à mes parents ?<br>
+                        ☐ Ai-je été égoïste ou jaloux ?<br>
+                        ☐ Ai-je menti pour me protéger ?<br>
+                        ☐ Ai-je oublié de prier Dieu chaque jour ?<br>
+                        ☐ Ai-je manqué de charité envers les autres ?
+                    </div>
+                </div>
+
+                <div class="card" onclick="openPrayer('acte-contrition')">
+                    <div style="font-weight:700; color:var(--accent);">Acte de Contrition →</div>
+                    <div style="font-size:12px; color:var(--muted);">À dire pour demander pardon.</div>
+                </div>
+            </div>
+
+            <div class="version-footer">Crois en Moi — Version 2.0</div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const PRAYERS = [
+            { id: 'notre-pere', category: 'fundamental', tags: ['matin', 'soir', 'louange'],
+              title: 'Notre Père',
+              text: `Notre Père, qui es aux cieux,\nque ton nom soit sanctifié,\nque ton règne vienne,\nque ta volonté soit faite sur la terre comme au ciel.\n\nDonne-nous aujourd'hui notre pain de ce jour.\nPardonne-nous nos offenses,\ncomme nous pardonnons aussi à ceux qui nous ont offensés.\nEt ne nous laisse pas entrer en tentation,\nmais délivre-nous du Mal.\n\nAmen.`,
+              history: `La prière enseignée par Jésus à ses apôtres. Elle est le fondement de toute prière chrétienne.` },
+            { id: 'salut-marie', category: 'fundamental', tags: ['marie', 'intercession', 'soir'],
+              title: 'Je vous salue Marie',
+              text: `Je vous salue, Marie pleine de grâce ;\nle Seigneur est avec vous.\nVous êtes bénie entre toutes les femmes\net Jésus, le fruit de vos entrailles, est béni.\n\nSainte Marie, Mère de Dieu,\npriez pour nous pauvres pécheurs,\nmaintenant et à l'heure de notre mort.\n\nAmen.`,
+              history: `Une prière composée des paroles de l'Ange Gabriel et d'Élisabeth, pour honorer la Mère de Dieu.` },
+            { id: 'gloire-au-pere', category: 'fundamental', tags: ['louange'],
+              title: 'Gloire au Père',
+              text: `Gloire au Père, et au Fils, et au Saint-Esprit,\ncomme il était au commencement, maintenant et toujours,\net dans les siècles des siècles.\n\nAmen.`,
+              history: `Une louange à la Sainte Trinité, proclamant la gloire éternelle de Dieu.` },
+            { id: 'credo', category: 'fundamental', tags: ['louange'],
+              title: 'Le Credo',
+              text: `Je crois en Dieu, le Père tout-puissant,\nCréateur du ciel et de la terre.\nEt en Jésus Christ, son Fils unique, notre Seigneur ;\nqui a été conçu du Saint-Esprit, est né de la Vierge Marie,\na souffert sous Ponce Pilate, a été crucifié,\nest mort et a été enseveli, est descendu aux enfers ;\nle troisième jour est ressuscité des morts,\nest monté aux cieux, est assis à la droite de Dieu le Père tout-puissant,\nd'où il viendra juger les vivants et les morts.\n\nJe crois en l'Esprit Saint, à la sainte Église catholique,\nà la communion des saints, à la rémission des péchés,\nà la résurrection de la chair, à la vie éternelle.\n\nAmen.`,
+              history: `Appelé "Symbole des Apôtres", ce texte résume les piliers de la foi catholique.` },
+            { id: 'offrande-matin', category: 'daily', tags: ['matin'],
+              title: 'Offrande du matin',
+              text: `Mon Dieu, je t'offre mon cœur, mon esprit,\nmes pensées, mes paroles et mes actions de ce jour.\nJe veux tout faire pour ton amour et pour ta gloire.\nJe t'offre aussi mes joies et mes peines.\nGarde-moi du péché et aide-moi à aimer mon prochain\ncomme toi tu m'aimes.\n\nAmen.`,
+              history: `Une prière pour consacrer chaque instant de sa journée au Seigneur.` },
+            { id: 'priere-soir', category: 'daily', tags: ['soir'],
+              title: 'Prière du soir',
+              text: `Mon Dieu, je te remercie pour cette journée qui s'achève.\nPardonne-moi mes fautes de ce jour.\nVeille sur moi pendant mon sommeil\net bénis tous ceux que j'aime.\nC'est entre tes mains que je remets mon esprit.\n\nAmen.`,
+              history: `Pour confier sa nuit à Dieu et faire le bilan de sa journée avec Lui.` },
+            { id: 'salve-regina', category: 'marian', tags: ['marie', 'intercession'],
+              title: 'Salve Regina',
+              text: `Salut, Reine, Mère de Miséricorde,\nnotre vie, notre douceur et notre espérance, salut !\nEnfants d'Ève, exilés, nous crions vers vous ;\nvers vous nous soupirons, gémissant et pleurant\ndans cette vallée de larmes.\nÔ vous, notre avocate,\ntournez vers nous vos regards miséricordieux.\nEt après cet exil,\nmontrez-nous Jésus, le fruit béni de vos entrailles.\nÔ clémente, ô miséricordieuse,\nô douce Vierge Marie !\n\nAmen.`,
+              history: `Un chant de confiance et d'amour envers la Reine du Ciel.` },
+            { id: 'acte-contrition', category: 'penitence', tags: ['penitence'],
+              title: 'Acte de Contrition',
+              text: `Mon Dieu, j'ai un très grand regret de t'avoir offensé\nparce que tu es infiniment bon, infiniment aimable,\net que le péché te déplaît.\nJe prends la ferme résolution,\navec le secours de ta sainte grâce,\nde ne plus t'offenser et de faire pénitence.\n\nAmen.`,
+              history: `La prière du regret sincère, indispensable pour le sacrement de confession.` },
+            { id: 'confiteor', category: 'penitence', tags: ['penitence'],
+              title: 'Je confesse à Dieu',
+              text: `Je confesse à Dieu tout-puissant,\nje reconnais devant vous, frères et sœurs,\nque j'ai péché en pensée, en parole,\npar action et par omission ;\noui, j'ai vraiment péché.\nC'est pourquoi je supplie la bienheureuse Vierge Marie,\nles anges et tous les saints, et vous aussi, frères et sœurs,\nde prier pour moi le Seigneur notre Dieu.\n\nAmen.`,
+              history: `Pour reconnaître son humilité devant Dieu et la communauté.` }
+        ];
+
+        const CHANTS = [
+            { title: 'Kyrie Eleison',
+              text: `Kyrie, eleison. (Seigneur, prends pitié)\nChriste, eleison. (Ô Christ, prends pitié)\nKyrie, eleison. (Seigneur, prends pitié)`,
+              history: `Le Kyrie est le chant de pénitence et d'imploration de la miséricorde divine au début de la messe.` },
+            { title: 'Gloria in Excelsis Deo',
+              text: `Gloire à Dieu, au plus haut des cieux,\nEt paix sur la terre aux hommes qu'il aime.\nNous te louons, nous te bénissons, nous t'adorons,\nNous te glorifions, nous te rendons grâce,\npour ton immense gloire,\nSeigneur Dieu, Roi du ciel,\nDieu le Père tout-puissant.\n\nSeigneur, Fils unique, Jésus Christ, Seigneur Dieu,\nAgneau de Dieu, le Fils du Père ;\nToi qui enlèves les péchés du monde, prends pitié de nous ;\nToi qui es assis à la droite du Père, prends pitié de nous.\n\nCar toi seul es saint, Toi seul es Seigneur,\nToi seul es le Très-Haut : Jésus Christ,\navec le Saint-Esprit dans la gloire de Dieu le Père.\nAmen.`,
+              history: `L'hymne de louange qui célèbre la divinité de Dieu et du Christ.` },
+            { title: 'Alléluia',
+              text: `Alléluia, Alléluia !\nTa parole, Seigneur, est vérité et ta loi, charité.\nAlléluia !`,
+              history: `L'Alléluia (Louez le Seigneur) est l'acclamation joyeuse qui précède la lecture de l'Évangile.` },
+            { title: 'Sanctus',
+              text: `Saint ! Saint ! Saint, le Seigneur, Dieu de l'univers !\nLe ciel et la terre sont remplis de ta gloire.\nHosanna au plus haut des cieux.\nBéni soit celui qui vient au nom du Seigneur.\nHosanna au plus haut des cieux.`,
+              history: `Le chant des anges qui unit le ciel et la terre lors de la consécration.` },
+            { title: 'Agnus Dei',
+              text: `Agneau de Dieu, qui enlèves les péchés du monde, prends pitié de nous.\nAgneau de Dieu, qui enlèves les péchés du monde, prends pitié de nous.\nAgneau de Dieu, qui enlèves les péchés du monde, donne-nous la paix.`,
+              history: `Le chant de fraction du pain, reconnaissant Jésus comme l'Agneau sacrifié pour nous.` }
+        ];
+
+        const ROSARY_MYSTERIES = {
+            joyful:    { name: "Mystères Joyeux",     items: ["L'Annonciation", "La Visitation", "La Nativité", "La Présentation", "Le Recouvrement de Jésus"] },
+            sorrowful: { name: "Mystères Douloureux",  items: ["L'Agonie", "La Flagellation", "Le Couronnement d'épines", "Le Portement de Croix", "Le Crucifiement"] },
+            glorious:  { name: "Mystères Glorieux",    items: ["La Résurrection", "L'Ascension", "La Pentecôte", "L'Assomption", "Le Couronnement de Marie"] },
+            luminous:  { name: "Mystères Lumineux",    items: ["Le Baptême de Jésus", "Les Noces de Cana", "L'Annonce du Royaume", "La Transfiguration", "L'Eucharistie"] }
+        };
+
+        const SAINTS = {
+            "0-19": "Saint Sébastien", "0-21": "Sainte Agnès",
+            "1-2": "Présentation du Seigneur", "1-11": "Notre-Dame de Lourdes",
+            "2-17": "Saint Patrick", "2-19": "Saint Joseph", "2-25": "Annonciation",
+            "5-13": "Saint Antoine de Padoue", "5-24": "Saint Jean-Baptiste",
+            "5-29": "Saint Pierre et Saint Paul",
+            "7-15": "Assomption de Marie",
+            "10-1": "Toussaint", "11-25": "Noël — La Nativité"
+        };
+
+        // --- STATE ---
+        let rosaryState = { type: 'joyful', decade: 0, step: 0 };
+        let currentFilter = 'all';
+        let detailFrom = 'prayers';
+
+        // --- CORE ---
+        function closeSplash() {
+            const s = document.getElementById('splash');
+            s.style.opacity = '0';
+            setTimeout(() => s.style.display = 'none', 500);
+        }
+
+        function toggleDrawer() {
+            document.getElementById('drawer').classList.toggle('open');
+            const o = document.getElementById('overlay');
+            o.style.display = o.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.getElementById('drawer').classList.remove('open');
+            document.getElementById('overlay').style.display = 'none';
+            document.querySelector('.screens-container').scrollTop = 0;
+            if (id === 'chapelet') initRosary();
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+            try { localStorage.setItem('crois-theme', html.getAttribute('data-theme')); } catch(e){}
+        }
+
+        function openPrayer(id, from) {
+            const p = PRAYERS.find(x => x.id === id);
+            if (!p) return;
+            detailFrom = from || 'prayers';
+            document.getElementById('detail-title').innerText = p.title;
+            document.getElementById('detail-text').innerText = p.text;
+            document.getElementById('detail-history').innerText = p.history;
+            showScreen('prayer-detail');
+        }
+
+        function backToLibrary() { showScreen(detailFrom); }
+
+        // --- LITURGICAL ---
+        function initLiturgical() {
+            const now = new Date();
+            const m = now.getMonth(), d = now.getDate();
+            let season = "Temps Ordinaire", color = "var(--lit-green)";
+            if (m === 11 && d <= 24) { season = "Avent"; color = "var(--lit-violet)"; }
+            else if ((m === 11 && d >= 25) || (m === 0 && d <= 10)) { season = "Temps de Noël"; color = "var(--lit-white)"; }
+            else if (m === 1 || m === 2) { season = "Carême"; color = "var(--lit-violet)"; }
+            else if (m === 3 || m === 4) { season = "Temps Pascal"; color = "var(--lit-white)"; }
+            document.getElementById('lit-season-name').innerText = season;
+            document.getElementById('lit-color-dot').style.background = color;
+            document.getElementById('liturgical-card').style.setProperty('--lit-color', color);
+            const key = `${m}-${d}`;
+            document.getElementById('lit-saint').innerText = SAINTS[key] || "Fête des Saints";
+        }
+
+        // --- ROSARY ---
+        function initRosary() {
+            const day = new Date().getDay();
+            if (day === 1 || day === 4) rosaryState.type = 'joyful';
+            else if (day === 2 || day === 5) rosaryState.type = 'sorrowful';
+            else if (day === 3 || day === 6) rosaryState.type = 'glorious';
+            else rosaryState.type = 'luminous';
+            rosaryState.decade = 0; rosaryState.step = 0;
+            document.getElementById('rosary-type').innerText = ROSARY_MYSTERIES[rosaryState.type].name;
+            updateRosaryUI();
+        }
+
+        function updateRosaryUI() {
+            const t = ROSARY_MYSTERIES[rosaryState.type];
+            document.getElementById('rosary-mystery-name').innerText = `${rosaryState.decade + 1}. ${t.items[rosaryState.decade]}`;
+            let pName, pText, counter;
+            if (rosaryState.step === 0) {
+                pName = "NOTRE PÈRE"; counter = "Intro";
+                pText = "Notre Père qui es aux cieux, que ton nom soit sanctifié, que ton règne vienne...";
+            } else if (rosaryState.step <= 10) {
+                pName = "JE VOUS SALUE MARIE"; counter = `${rosaryState.step} / 10`;
+                pText = "Je vous salue Marie, pleine de grâce, le Seigneur est avec vous...";
+            } else {
+                pName = "GLOIRE AU PÈRE"; counter = "Fin de dizaine";
+                pText = "Gloire au Père, au Fils et au Saint-Esprit...";
+            }
+            document.getElementById('rosary-prayer-name').innerText = pName;
+            document.getElementById('rosary-prayer-text').innerText = pText;
+            document.getElementById('rosary-step-counter').innerText = counter;
+            document.getElementById('rosary-progress').innerText = `Dizaine ${rosaryState.decade + 1} / 5`;
+            document.getElementById('rosary-prev').disabled = (rosaryState.decade === 0 && rosaryState.step === 0);
+        }
+
+        function rosaryNext() {
+            if (rosaryState.step < 11) { rosaryState.step++; }
+            else if (rosaryState.decade < 4) { rosaryState.decade++; rosaryState.step = 0; }
+            else { alert("Chapelet terminé. Que Dieu vous bénisse ! 🙏"); rosaryState.decade = 0; rosaryState.step = 0; }
+            updateRosaryUI();
+        }
+
+        function rosaryPrev() {
+            if (rosaryState.step > 0) { rosaryState.step--; }
+            else if (rosaryState.decade > 0) { rosaryState.decade--; rosaryState.step = 11; }
+            updateRosaryUI();
+        }
+
+        // --- PRAYERS FILTER ---
+        function filterPrayers(tag, el) {
+            currentFilter = tag;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            renderPrayers();
+        }
+
+        function renderPrayers() {
+            const container = document.getElementById('prayer-categories');
+            container.innerHTML = "";
+            const cats = [
+                { id: 'fundamental', title: 'Prières Fondamentales' },
+                { id: 'daily',       title: 'Vie Quotidienne' },
+                { id: 'marian',      title: 'Prières Mariales' },
+                { id: 'penitence',   title: 'Pénitence & Sacrements' }
+            ];
+            cats.forEach(cat => {
+                let catPrayers = PRAYERS.filter(p => p.category === cat.id);
+                if (currentFilter !== 'all') catPrayers = catPrayers.filter(p => p.tags.includes(currentFilter));
+                if (catPrayers.length > 0) {
+                    const title = document.createElement('div');
+                    title.className = 'category-title';
+                    title.innerText = cat.title;
+                    container.appendChild(title);
+                    catPrayers.forEach(p => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.onclick = () => openPrayer(p.id, 'prayers');
+                        card.innerHTML = `<div style="font-weight:700;">${p.title}</div><div style="font-size:12px; color:var(--muted);">Texte intégral</div>`;
+                        container.appendChild(card);
+                    });
+                }
+            });
+        }
+
+        // --- CHANTS ---
+        function renderChants() {
+            const container = document.getElementById('chants-list');
+            CHANTS.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => {
+                    detailFrom = 'chants';
+                    document.getElementById('detail-title').innerText = c.title;
+                    document.getElementById('detail-text').innerText = c.text;
+                    document.getElementById('detail-history').innerText = c.history;
+                    showScreen('prayer-detail');
+                };
+                card.innerHTML = `<div style="font-weight:700;">${c.title}</div><div style="font-size:12px; color:var(--muted);">Paroles & Sens</div>`;
+                container.appendChild(card);
+            });
+        }
+
+        // --- INIT ---
+        window.onload = () => {
+            try {
+                const saved = localStorage.getItem('crois-theme');
+                if (saved) document.documentElement.setAttribute('data-theme', saved);
+            } catch(e){}
+            initLiturgical();
+            renderPrayers();
+            renderChants();
+            setTimeout(closeSplash, 2500);
+        };
+    </script>
+</body>
+</html>
