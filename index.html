@@ -244,6 +244,21 @@
 </head>
 <body>
 
+    <!-- Update Overlay -->
+    <div id="update-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:3000; align-items:center; justify-content:center; flex-direction:column; padding:24px;">
+        <div style="background:var(--surface); border-radius:24px; padding:32px 24px; max-width:320px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="font-size:52px; margin-bottom:16px;">🔔</div>
+            <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:var(--muted); margin-bottom:8px;">Application</div>
+            <div style="font-size:24px; font-weight:900; color:var(--accent); margin-bottom:8px; line-height:1.2;">MISE À JOUR<br>DISPONIBLE</div>
+            <div id="update-version-label" style="font-size:13px; color:var(--muted); margin-bottom:28px; line-height:1.5;">Une nouvelle version est prête à être installée.</div>
+            <a id="update-download-btn" href="https://github.com/Niakimbo22/crois-en-moi/releases/latest/download/crois-en-moi.apk"
+               style="display:block; padding:16px; background:var(--accent); color:white; border-radius:14px; font-weight:800; font-size:16px; text-decoration:none; margin-bottom:12px; letter-spacing:0.3px;">
+                ⬇ Mettre à jour maintenant
+            </a>
+            <button onclick="dismissUpdate()" style="background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; padding:8px; width:100%;">Plus tard</button>
+        </div>
+    </div>
+
     <!-- Splash Screen -->
     <div id="splash" onclick="closeSplash()">
         <div class="splash-logo">✝️</div>
@@ -460,7 +475,7 @@
                 </div>
             </div>
 
-            <div class="version-footer">Crois en Moi — Version 2.1</div>
+            <div class="version-footer">Crois en Moi — Version 2.2</div>
 
         </div>
     </div>
@@ -540,6 +555,27 @@
             "7-15": "Assomption de Marie",
             "10-1": "Toussaint", "11-25": "Noël — La Nativité"
         };
+
+        // --- VERSION CHECK ---
+        const APP_VERSION = "2.2";
+        const VERSION_URL = "https://niakimbo22.github.io/crois-en-moi/version.json";
+
+        async function checkForUpdate() {
+            try {
+                const resp = await fetch(VERSION_URL + "?t=" + Date.now());
+                const data = await resp.json();
+                if (data.version && data.version !== APP_VERSION) {
+                    const overlay = document.getElementById('update-overlay');
+                    document.getElementById('update-version-label').textContent =
+                        `Version ${data.version} disponible — tu as la ${APP_VERSION}.`;
+                    overlay.style.display = 'flex';
+                }
+            } catch(e) { /* Pas de réseau ou fichier absent */ }
+        }
+
+        function dismissUpdate() {
+            document.getElementById('update-overlay').style.display = 'none';
+        }
 
         // Screen labels for header
         const SCREEN_LABELS = {
@@ -733,6 +769,8 @@
             // Mark home as active on load
             showScreen('home');
             setTimeout(closeSplash, 2500);
+            // Vérifier les mises à jour
+            setTimeout(checkForUpdate, 3000);
         };
     </script>
 </body>
