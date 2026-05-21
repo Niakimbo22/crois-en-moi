@@ -1,0 +1,36 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.croisenmoi.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.croisenmoi.app"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "2.0"
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    // Aucune dépendance externe — WebView est natif Android
+}
