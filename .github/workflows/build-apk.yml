@@ -10,10 +10,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Setup consistent debug keystore
+        run: |
+          if [ ! -f android/debug.keystore ]; then
+            echo "Generating new debug keystore..."
+            keytool -genkeypair -v \
+              -keystore android/debug.keystore \
+              -alias androiddebugkey \
+              -keyalg RSA -keysize 2048 \
+              -validity 10000 \
+              -storepass android -keypass android \
+              -dname "CN=Android Debug,O=Android,C=US"
+            git config user.email "actions@github.com"
+            git config user.name "GitHub Actions"
+            git add android/debug.keystore
+            git commit -m "ci: add consistent debug keystore for stable APK signing"
+            git push
+          else
+            echo "Using existing keystore from repo."
+          fi
+          mkdir -p ~/.android
+          cp android/debug.keystore ~/.android/debug.keystore
       - name: Copy index.html to Android assets
         run: |
           mkdir -p android/app/src/main/assets
@@ -28,12 +52,6 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: gradle assembleDebug --info 2>&1 | tail -100
-      - name: Debug APK contents
-        run: |
-          APK=android/app/build/outputs/apk/debug/app-debug.apk
-          echo "APK size: $(stat -c%s $APK) bytes"
-          echo "APK contents:"
-          unzip -l $APK | head -30
       - name: Rename APK
         run: mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/crois-en-moi.apk
       - uses: ncipollo/release-action@v1
