@@ -26,23 +26,47 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets
           cp index.html android/app/src/main/assets/index.html
+          echo "index.html size: $(wc -c < android/app/src/main/assets/index.html) bytes"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.6'
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew 2>/dev/null || true
+      - name: Generate Gradle wrapper
+        working-directory: android
+        run: |
+          gradle wrapper --gradle-version=8.2.2
+          chmod +x gradlew
 
       - name: Build debug APK
         working-directory: android
-        run: gradle assembleDebug
+        run: |
+          ./gradlew assembleDebug --stacktrace 2>&1 | tail -150
+          echo "=== APK files ==="
+          find . -name "*.apk" -ls 2>/dev/null || echo "No APK found"
+
+      - name: Verify APK size
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK not found!"
+            find android -name "*.apk" 2>/dev/null
+            exit 1
+          fi
+          SIZE=$(wc -c < "$APK")
+          echo "APK size: $SIZE bytes"
+          if [ "$SIZE" -lt 500000 ]; then
+            echo "ERROR: APK too small ($SIZE bytes < 500000), build failed"
+            exit 1
+          fi
+          echo "APK size OK"
 
       - name: Rename APK
         run: |
           mv android/app/build/outputs/apk/debug/app-debug.apk \
              android/app/build/outputs/apk/debug/crois-en-moi.apk
+          echo "Final size: $(wc -c < android/app/build/outputs/apk/debug/crois-en-moi.apk) bytes"
 
       - name: Create or update GitHub Release
         uses: ncipollo/release-action@v1
@@ -50,15 +74,15 @@ jobs:
           allowUpdates: true
           removeArtifacts: true
           tag: latest
-          name: "Crois en Moi — Dernière version"
+          name: "Crois en Moi — Derniere version"
           body: |
             ## Crois en Moi v2.3 — APK Android
 
-            Application catholique : prières, chapelet guidé, chants de messe, calendrier liturgique.
+            Application catholique : prieres, chapelet guide, chants de messe, calendrier liturgique.
 
             **Installation :**
-            1. Télécharge `crois-en-moi.apk`
-            2. Sur ton téléphone : Paramètres → Sécurité → Autoriser les sources inconnues
-            3. Ouvre le fichier téléchargé et installe
+            1. Telecharge `crois-en-moi.apk`
+            2. Sur ton telephone : Parametres -> Securite -> Autoriser les sources inconnues
+            3. Ouvre le fichier telecharge et installe
           artifacts: android/app/build/outputs/apk/debug/crois-en-moi.apk
           token: ${{ secrets.GITHUB_TOKEN }}
