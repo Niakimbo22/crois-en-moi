@@ -28,39 +28,37 @@ jobs:
           cp index.html android/app/src/main/assets/index.html
           echo "index.html size: $(wc -c < android/app/src/main/assets/index.html) bytes"
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.2.2
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.6'
-
-      - name: Generate Gradle wrapper
-        working-directory: android
-        run: |
-          gradle wrapper --gradle-version=8.2.2
-          chmod +x gradlew
+          gradle-version: '8.2.2'
+          cache-disabled: true
 
       - name: Build debug APK
         working-directory: android
         run: |
-          ./gradlew assembleDebug --stacktrace 2>&1 | tail -150
+          echo "=== Gradle version ==="
+          gradle --version
+          echo "=== Build ==="
+          gradle assembleDebug --no-build-cache --rerun-tasks --info 2>&1 | tail -200
           echo "=== APK files ==="
-          find . -name "*.apk" -ls 2>/dev/null || echo "No APK found"
+          find . -name "*.apk" -exec ls -lh {} \;
 
       - name: Verify APK size
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           if [ ! -f "$APK" ]; then
             echo "ERROR: APK not found!"
-            find android -name "*.apk" 2>/dev/null
+            find android -name "*.apk" 2>/dev/null || true
             exit 1
           fi
           SIZE=$(wc -c < "$APK")
           echo "APK size: $SIZE bytes"
           if [ "$SIZE" -lt 500000 ]; then
-            echo "ERROR: APK too small ($SIZE bytes < 500000), build failed"
+            echo "ERROR: APK too small ($SIZE bytes), build failed silently"
             exit 1
           fi
-          echo "APK size OK"
+          echo "APK size OK: $SIZE bytes"
 
       - name: Rename APK
         run: |
@@ -74,9 +72,9 @@ jobs:
           allowUpdates: true
           removeArtifacts: true
           tag: latest
-          name: "Crois en Moi — Derniere version"
+          name: "Crois en Moi - Derniere version"
           body: |
-            ## Crois en Moi v2.3 — APK Android
+            ## Crois en Moi v2.3 - APK Android
 
             Application catholique : prieres, chapelet guide, chants de messe, calendrier liturgique.
 
