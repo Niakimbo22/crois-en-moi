@@ -40,5 +40,5 @@ android {
 }
 
 dependencies {
-    // WebView est natif Android — aucune dependance externe
+    implementation 'androidx.core:core:1.12.0'
 }
