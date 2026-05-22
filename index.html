@@ -492,20 +492,18 @@
     <script>
 
         function downloadAPK() {
-  var url = 'https://github.com/Niakimbo22/crois-en-moi/releases/latest/download/crois-en-moi.apk';
-  // Créer un modal simple
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
-  overlay.innerHTML = '<div style="background:#1a1a2e;border-radius:16px;padding:24px;width:100%;max-width:340px;font-family:sans-serif;">'
-    + '<p style="color:white;font-weight:700;font-size:16px;margin:0 0 8px;">\u{1F4E5} T\u00e9l\u00e9charger l\'APK</p>'
-    + '<p style="color:#aaa;font-size:13px;margin:0 0 16px;">Copie ce lien et ouvre-le dans Chrome :</p>'
-    + '<div style="background:#0d0d1a;border-radius:8px;padding:10px;margin-bottom:16px;word-break:break-all;font-size:11px;color:#7eb8f7;">' + url + '</div>'
-    + '<button onclick="navigator.clipboard.writeText(\'' + url + '\').then(function(){this.textContent=\'\u2705 Copi\u00e9 !\';this.style.background=\'#2ecc71\';}).catch(function(){});return false;" style="width:100%;padding:14px;background:var(--accent,#c9a227);color:white;border:none;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:10px;">\u{1F4CB} Copier le lien</button>'
-    + '<button onclick="this.closest(\'div\').parentNode.remove()" style="width:100%;padding:10px;background:transparent;color:#aaa;border:1px solid #333;border-radius:10px;font-size:14px;cursor:pointer;">Fermer</button>'
-    + '</div>';
-  document.body.appendChild(overlay);
-  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
-}
+          var url = 'https://github.com/Niakimbo22/crois-en-moi/releases/download/latest/crois-en-moi.apk';
+          if (window.Android && typeof window.Android.downloadAndInstall === 'function') {
+            // Mode app Android : téléchargement + installation automatique
+            window.Android.downloadAndInstall(url);
+            // Fermer l'overlay de mise à jour
+            var overlay = document.getElementById('update-overlay');
+            if (overlay) overlay.style.display = 'none';
+          } else {
+            // Mode navigateur web : ouvrir le lien
+            window.open(url, '_blank');
+          }
+        }
 
         // --- DATA ---
         const PRAYERS = [
