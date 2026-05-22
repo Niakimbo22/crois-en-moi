@@ -259,10 +259,11 @@
             <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:var(--muted); margin-bottom:8px;">Application</div>
             <div style="font-size:24px; font-weight:900; color:var(--accent); margin-bottom:8px; line-height:1.2;">MISE À JOUR<br>DISPONIBLE</div>
             <div id="update-version-label" style="font-size:13px; color:var(--muted); margin-bottom:28px; line-height:1.5;">Une nouvelle version est prête à être installée.</div>
-            <a id="update-download-btn" href="https://github.com/Niakimbo22/crois-en-moi/releases/latest/download/crois-en-moi.apk"
-               style="display:block; padding:16px; background:var(--accent); color:white; border-radius:14px; font-weight:800; font-size:16px; text-decoration:none; margin-bottom:12px; letter-spacing:0.3px;">
+            <button id="update-download-btn"
+               onclick="window.open('https://github.com/Niakimbo22/crois-en-moi/releases/latest/download/crois-en-moi.apk','_blank','noopener,noreferrer'); return false;"
+               style="display:block; width:100%; padding:16px; background:var(--accent); color:white; border-radius:14px; font-weight:800; font-size:16px; border:none; cursor:pointer; margin-bottom:12px; letter-spacing:0.3px;">
                 ⬇ Mettre à jour maintenant
-            </a>
+            </button>
             <button onclick="dismissUpdate()" style="background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; padding:8px; width:100%;">Plus tard</button>
         </div>
     </div>
@@ -365,10 +366,10 @@
                             <div style="font-size:12px; color:var(--muted);">APK Android — accès hors ligne</div>
                         </div>
                     </div>
-                    <a href="https://github.com/Niakimbo22/crois-en-moi/releases/latest/download/crois-en-moi.apk"
-                       style="display:block; text-align:center; padding:14px; background:var(--accent); color:white; border-radius:10px; font-weight:700; font-size:15px; text-decoration:none; letter-spacing:0.3px;">
+                    <button onclick="window.open('https://github.com/Niakimbo22/crois-en-moi/releases/latest/download/crois-en-moi.apk','_blank','noopener,noreferrer')"
+                       style="display:block; width:100%; text-align:center; padding:14px; background:var(--accent); color:white; border-radius:10px; font-weight:700; font-size:15px; border:none; cursor:pointer; letter-spacing:0.3px;">
                         ⬇ Télécharger l'APK
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -483,7 +484,7 @@
                 </div>
             </div>
 
-            <div class="version-footer">Crois en Moi — Version 2.2</div>
+            <div class="version-footer">Crois en Moi — Version 2.3</div>
 
         </div>
     </div>
@@ -565,7 +566,7 @@
         };
 
         // --- VERSION CHECK ---
-        const APP_VERSION = "2.2";
+        const APP_VERSION = "2.3";
         const VERSION_URL = "https://niakimbo22.github.io/crois-en-moi/version.json";
 
         async function checkForUpdate() {
