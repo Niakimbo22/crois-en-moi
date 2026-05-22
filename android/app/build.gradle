@@ -11,12 +11,11 @@ android {
         minSdk 21
         targetSdk 34
         versionCode 1
-        versionName "2.0"
+        versionName "2.3"
     }
 
     buildTypes {
         debug {
-            applicationIdSuffix ".debug"
             debuggable true
         }
         release {
@@ -29,8 +28,17 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+
+    sourceSets {
+        main {
+            java.srcDirs = ['src/main/java']
+            assets.srcDirs = ['src/main/assets']
+            res.srcDirs = ['src/main/res']
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+        }
+    }
 }
 
 dependencies {
-    // Aucune dépendance externe — WebView est natif Android
+    // WebView est natif Android — aucune dependance externe
 }
