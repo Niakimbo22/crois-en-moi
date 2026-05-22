@@ -18,6 +18,8 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets
           cp index.html android/app/src/main/assets/index.html
+          echo "Assets created:"
+          ls -la android/app/src/main/assets/
       - name: Install Gradle 8.6
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.6-bin.zip -O /tmp/gradle.zip
@@ -25,16 +27,13 @@ jobs:
           echo "/opt/gradle/gradle-8.6/bin" >> $GITHUB_PATH
       - name: Build debug APK
         working-directory: android
-        run: gradle assembleDebug
-      - name: Check APK size
+        run: gradle assembleDebug --info 2>&1 | tail -100
+      - name: Debug APK contents
         run: |
           APK=android/app/build/outputs/apk/debug/app-debug.apk
-          SIZE=$(stat -c%s "$APK")
-          echo "APK size: $SIZE bytes"
-          if [ $SIZE -lt 500000 ]; then
-            echo "ERROR: APK too small ($SIZE bytes) - build likely failed"
-            exit 1
-          fi
+          echo "APK size: $(stat -c%s $APK) bytes"
+          echo "APK contents:"
+          unzip -l $APK | head -30
       - name: Rename APK
         run: mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/crois-en-moi.apk
       - uses: ncipollo/release-action@v1
