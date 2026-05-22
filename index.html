@@ -590,7 +590,7 @@
             try {
                 const resp = await fetch(VERSION_URL + "?t=" + Date.now());
                 const data = await resp.json();
-                if (data.version && data.version !== APP_VERSION) {
+                if (data.version && parseFloat(data.version) > parseFloat(APP_VERSION)) {
                     const overlay = document.getElementById('update-overlay');
                     document.getElementById('update-version-label').textContent =
                         `Version ${data.version} disponible — tu as la ${APP_VERSION}.`;
