@@ -10,8 +10,9 @@ android {
         applicationId "com.croisenmoi.app"
         minSdk 21
         targetSdk 34
-        versionCode 1
-        versionName "2.3"
+        // Renseignés automatiquement depuis version.json au moment du build.
+        versionCode 205
+        versionName "2.5"
     }
 
     buildTypes {

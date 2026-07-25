@@ -46,6 +46,15 @@ jobs:
           echo "Assets created:"
           ls -la android/app/src/main/assets/
           echo "Bible files: $(ls android/app/src/main/assets/bible | wc -l)"
+      - name: Sync app version from version.json
+        run: |
+          VERSION=$(python3 -c "import json;print(json.load(open('version.json'))['version'])")
+          CODE=$(echo "$VERSION" | awk -F. '{printf "%d%02d", $1, ($2==""?0:$2)}')
+          echo "Version $VERSION (versionCode $CODE)"
+          sed -i "s/versionCode .*/versionCode $CODE/; s/versionName \".*\"/versionName \"$VERSION\"/" \
+            android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+
       - name: Install Gradle 8.6
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.6-bin.zip -O /tmp/gradle.zip

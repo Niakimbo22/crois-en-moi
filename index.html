@@ -367,6 +367,9 @@
                style="display:block; width:100%; padding:16px; background:var(--accent); color:white; border-radius:14px; font-weight:800; font-size:16px; border:none; cursor:pointer; margin-bottom:12px; letter-spacing:0.3px;">
                 ⬇ Mettre à jour maintenant
             </button>
+            <button onclick="openDownloadPage()" style="display:block; width:100%; padding:12px; background:none; border:1px solid var(--border); border-radius:14px; color:var(--fg); font-weight:600; font-size:14px; cursor:pointer; margin-bottom:12px;">
+                Télécharger depuis le navigateur
+            </button>
             <button onclick="dismissUpdate()" style="background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; padding:8px; width:100%;">Plus tard</button>
         </div>
     </div>
@@ -724,7 +727,7 @@
                 </div>
             </div>
 
-            <div class="version-footer">Crois en Moi — Version 2.4</div>
+            <div class="version-footer">Crois en Moi — Version 2.5</div>
 
         </div>
     </div>
@@ -742,18 +745,30 @@
 
     <script>
 
+        const APK_URL = 'https://github.com/Niakimbo22/crois-en-moi/releases/download/latest/crois-en-moi.apk';
+        const RELEASE_PAGE = 'https://github.com/Niakimbo22/crois-en-moi/releases/latest';
+
         function downloadAPK() {
-          var url = 'https://github.com/Niakimbo22/crois-en-moi/releases/download/latest/crois-en-moi.apk';
           if (window.Android && typeof window.Android.downloadAndInstall === 'function') {
             // Mode app Android : téléchargement + installation automatique
-            window.Android.downloadAndInstall(url);
-            // Fermer l'overlay de mise à jour
-            var overlay = document.getElementById('update-overlay');
-            if (overlay) overlay.style.display = 'none';
-          } else {
-            // Mode navigateur web : ouvrir le lien
-            window.open(url, '_blank');
+            try {
+              window.Android.downloadAndInstall(APK_URL);
+              var overlay = document.getElementById('update-overlay');
+              if (overlay) overlay.style.display = 'none';
+              return;
+            } catch (e) { /* Pont indisponible : on passe par le navigateur */ }
           }
+          openDownloadPage();
+        }
+
+        // Solution de repli : télécharger l'APK depuis le navigateur du téléphone.
+        function openDownloadPage() {
+          if (window.Android && typeof window.Android.openInBrowser === 'function') {
+            try { window.Android.openInBrowser(RELEASE_PAGE); return; } catch (e) {}
+          }
+          // Dans l'app, une navigation http est redirigée vers le navigateur système.
+          if (window.Android) { window.location.href = RELEASE_PAGE; return; }
+          window.open(APK_URL, '_blank');
         }
 
         // --- DATA ---
@@ -832,7 +847,7 @@
         };
 
         // --- VERSION CHECK ---
-        const APP_VERSION = "2.4";
+        const APP_VERSION = "2.5";
         const VERSION_URL = "https://niakimbo22.github.io/crois-en-moi/version.json";
 
         async function checkForUpdate() {
