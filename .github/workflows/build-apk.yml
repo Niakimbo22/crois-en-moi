@@ -38,12 +38,14 @@ jobs:
           fi
           mkdir -p ~/.android
           cp android/debug.keystore ~/.android/debug.keystore
-      - name: Copy index.html to Android assets
+      - name: Copy web app to Android assets
         run: |
           mkdir -p android/app/src/main/assets
           cp index.html android/app/src/main/assets/index.html
+          cp -r bible android/app/src/main/assets/bible
           echo "Assets created:"
           ls -la android/app/src/main/assets/
+          echo "Bible files: $(ls android/app/src/main/assets/bible | wc -l)"
       - name: Install Gradle 8.6
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.6-bin.zip -O /tmp/gradle.zip
