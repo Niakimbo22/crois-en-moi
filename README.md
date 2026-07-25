@@ -13,10 +13,16 @@ Application catholique francophone (web + APK Android), utilisable entièrement 
 
 ## La rubrique Lecture
 
-Le texte biblique est stocké dans `bible/`, un fichier JSON par livre plus un
-`index.json` décrivant les livres et le nombre de versets par chapitre. Les
+Le texte biblique est stocké dans `bible/`, un fichier par livre plus un
+`index.js` décrivant les livres et le nombre de versets par chapitre. Les
 fichiers sont copiés dans les assets Android au moment du build, donc la lecture
 et la recherche fonctionnent sans aucune connexion.
+
+Ces fichiers sont du JavaScript (`CEM_BIBLE("jn", [...])`) chargé par balise
+`<script>`, et non du JSON : une page ouverte depuis `file:///android_asset/`
+ne peut utiliser ni `fetch` ni `XMLHttpRequest`, tous deux bloqués par la
+politique d'origine. Le chargement par script est le seul qui fonctionne à la
+fois dans l'application et sur le web.
 
 - Lecteur par chapitre, navigation continue d'un livre à l'autre, taille de texte réglable
 - Recherche plein texte insensible à la casse et aux accents, avec surlignage

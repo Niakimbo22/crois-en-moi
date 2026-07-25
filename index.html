@@ -727,7 +727,7 @@
                 </div>
             </div>
 
-            <div class="version-footer">Crois en Moi — Version 2.6</div>
+            <div class="version-footer">Crois en Moi — Version 2.7</div>
 
         </div>
     </div>
@@ -847,7 +847,7 @@
         };
 
         // --- VERSION CHECK ---
-        const APP_VERSION = "2.6";
+        const APP_VERSION = "2.7";
         const VERSION_URL = "https://niakimbo22.github.io/crois-en-moi/version.json";
 
         // Compare « 2.10 » et « 2.9 » correctement, nombre par nombre.
@@ -1089,11 +1089,36 @@
         ];
 
         // --- Chargement des données ---
+        // Les textes sont chargés par balise <script> : contrairement à fetch et
+        // XMLHttpRequest, c'est le seul mécanisme autorisé quand la page vient
+        // de file:///android_asset/ (application Android hors ligne).
+        const pendingScripts = {};
+        let indexPayload = null;
+
+        window.CEM_BIBLE = function (id, chapters) { BIBLE.books[id] = chapters; };
+        window.CEM_BIBLE_INDEX = function (data) { indexPayload = data; };
+
+        function loadScript(src) {
+            if (pendingScripts[src]) return pendingScripts[src];
+            pendingScripts[src] = new Promise((resolve, reject) => {
+                const el = document.createElement('script');
+                el.src = src;
+                el.async = true;
+                el.onload = () => resolve();
+                el.onerror = () => {
+                    delete pendingScripts[src];
+                    reject(new Error('Texte biblique introuvable : ' + src));
+                };
+                document.head.appendChild(el);
+            });
+            return pendingScripts[src];
+        }
+
         async function loadBibleIndex() {
             if (BIBLE.index) return BIBLE.index;
-            const resp = await fetch(BIBLE_PATH + 'index.json');
-            const data = await resp.json();
-            BIBLE.index = data.books;
+            await loadScript(BIBLE_PATH + 'index.js');
+            if (!indexPayload) throw new Error('Index biblique illisible');
+            BIBLE.index = indexPayload.books;
             BIBLE.index.forEach(b => {
                 b.aliases = [b.id, normalize(b.a).replace(/\s/g, ''),
                              normalize(b.n).replace(/\s/g, ''),
@@ -1105,9 +1130,19 @@
 
         async function loadBook(id) {
             if (BIBLE.books[id]) return BIBLE.books[id];
-            const resp = await fetch(BIBLE_PATH + id + '.json');
-            BIBLE.books[id] = await resp.json();
+            await loadScript(BIBLE_PATH + id + '.js');
+            if (!BIBLE.books[id]) throw new Error('Livre illisible : ' + id);
             return BIBLE.books[id];
+        }
+
+        // Un échec de chargement doit se voir, pas laisser un bouton sans effet.
+        let dataErrorShown = false;
+        function reportDataError(err) {
+            console.error(err);
+            if (dataErrorShown) return;
+            dataErrorShown = true;
+            alert('Le texte biblique n\'a pas pu être chargé.\n\n' +
+                  ((err && err.message) ? err.message : err));
         }
 
         function normalize(s) {
@@ -1158,7 +1193,7 @@
 
         async function openBooks(testament) {
             currentTestament = testament || 'all';
-            await loadBibleIndex();
+            try { await loadBibleIndex(); } catch (e) { return reportDataError(e); }
             document.getElementById('book-filter').value = '';
             document.querySelectorAll('#bible-books .filter-chip').forEach(c =>
                 c.classList.toggle('active', c.dataset.testament === currentTestament));
@@ -1208,7 +1243,7 @@
         let currentBookId = null;
 
         async function openBook(id, from) {
-            await loadBibleIndex();
+            try { await loadBibleIndex(); } catch (e) { return reportDataError(e); }
             chaptersBackTo = from || 'lecture';
             currentBookId = id;
             const b = BIBLE.meta[id];
@@ -1236,7 +1271,7 @@
         let readerState = { book: null, chapter: 1, backTo: 'lecture' };
 
         async function openChapter(bookId, chapter, targetVerse, from) {
-            await loadBibleIndex();
+            try { await loadBibleIndex(); } catch (e) { return reportDataError(e); }
             const meta = BIBLE.meta[bookId];
             if (!meta) return;
             chapter = Math.min(Math.max(1, chapter), meta.ch.length);
@@ -1246,7 +1281,10 @@
             verses.innerHTML = '<div class="empty-state">Ouverture du texte…</div>';
             showScreen('bible-reader');
 
-            const book = await loadBook(bookId);
+            let book;
+            try { book = await loadBook(bookId); }
+            catch (e) { verses.innerHTML = '<div class="empty-state">Texte indisponible.</div>';
+                        return reportDataError(e); }
             const marks = getBookmarks();
             const chapterVerses = book[chapter - 1] || [];
 
@@ -1378,7 +1416,7 @@
 
         // --- Signets ---
         async function openBookmarks() {
-            await loadBibleIndex();
+            try { await loadBibleIndex(); } catch (e) { return reportDataError(e); }
             const marks = getBookmarks();
             const list = document.getElementById('bookmarks-list');
             if (!marks.length) {
@@ -1404,7 +1442,7 @@
         let searchScope = 'all';
 
         async function openSearch() {
-            await loadBibleIndex();
+            try { await loadBibleIndex(); } catch (e) { return reportDataError(e); }
             showScreen('bible-search');
             setTimeout(() => document.getElementById('search-input').focus(), 250);
         }
@@ -1503,10 +1541,16 @@
             progress.style.display = 'block';
             status.textContent = 'Préparation du texte…';
 
-            await ensureBooksLoaded(books, (done, total) => {
-                fill.style.width = total ? (done / total * 100) + '%' : '100%';
-                if (total) status.textContent = `Chargement du texte… ${done}/${total} livres`;
-            });
+            try {
+                await ensureBooksLoaded(books, (done, total) => {
+                    fill.style.width = total ? (done / total * 100) + '%' : '100%';
+                    if (total) status.textContent = `Chargement du texte… ${done}/${total} livres`;
+                });
+            } catch (e) {
+                progress.style.display = 'none';
+                status.textContent = 'Le texte biblique n\'a pas pu être chargé.';
+                return reportDataError(e);
+            }
             progress.style.display = 'none';
 
             const found = [];

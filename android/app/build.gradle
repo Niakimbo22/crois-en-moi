@@ -11,8 +11,8 @@ android {
         minSdk 21
         targetSdk 34
         // Renseignés automatiquement depuis version.json au moment du build.
-        versionCode 206
-        versionName "2.6"
+        versionCode 207
+        versionName "2.7"
     }
 
     buildTypes {
