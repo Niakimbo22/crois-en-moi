@@ -248,6 +248,109 @@
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
+
+        /* ===== LECTURE / BIBLE ===== */
+        .back-btn { background:none; border:none; color:var(--accent); font-weight:700; cursor:pointer; padding:0; font-size:16px; margin-bottom:16px; }
+
+        .tile-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin-bottom:8px; }
+        .tile {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius-md); padding:18px 12px; cursor:pointer;
+            text-align:center; transition:transform .15s, border-color .2s;
+        }
+        .tile:active { transform:scale(0.97); border-color:var(--accent); }
+        .tile-emoji { font-size:26px; display:block; margin-bottom:8px; }
+        .tile-title { font-weight:700; font-size:14px; }
+        .tile-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+
+        .search-field {
+            display:flex; align-items:center; gap:8px;
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius-md); padding:0 12px; margin-bottom:12px;
+        }
+        .search-field input {
+            flex:1; border:none; background:transparent; color:var(--fg);
+            font-size:16px; padding:14px 0; outline:none; font-family:var(--font-sans);
+        }
+        .search-field input::placeholder { color:var(--muted); }
+        .search-clear { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:4px; }
+
+        .book-row {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:13px 6px; border-bottom:1px solid var(--border); cursor:pointer;
+        }
+        .book-row:active { background:var(--accent-muted); }
+        .book-name { font-weight:600; font-size:15px; }
+        .book-meta { font-size:11px; color:var(--muted); }
+
+        .chapter-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(54px, 1fr)); gap:8px; }
+        .chapter-cell {
+            aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+            border:1px solid var(--border); border-radius:10px; background:var(--surface);
+            cursor:pointer; font-weight:600; font-size:15px; transition:all .15s;
+        }
+        .chapter-cell:active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+        /* Lecteur */
+        .reader-bar {
+            position:sticky; top:0; z-index:20;
+            background:var(--bg); border-bottom:1px solid var(--border);
+            display:flex; align-items:center; justify-content:space-between;
+            gap:8px; padding:10px 0; margin:-20px -20px 16px; padding-inline:20px;
+        }
+        .reader-ref { font-family:var(--font-serif); font-weight:700; font-size:16px; color:var(--accent); text-align:center; flex:1; cursor:pointer; }
+        .reader-nav {
+            background:var(--surface); border:1px solid var(--border); color:var(--fg);
+            width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:18px; flex-shrink:0;
+        }
+        .reader-nav:disabled { opacity:.3; }
+
+        #bible-verses { font-size:var(--reader-size, 18px); }
+        .verse {
+            font-family:var(--font-serif); line-height:1.8; margin-bottom:6px;
+            padding:3px 6px; border-radius:6px; cursor:pointer;
+            transition:background .2s; display:block;
+        }
+        .verse-num { font-family:var(--font-sans); font-size:.62em; font-weight:800; color:var(--accent); vertical-align:super; margin-right:5px; }
+        .verse.bookmarked { background:var(--accent-muted); }
+        .verse.target { animation:verseFlash 2.5s ease; }
+        @keyframes verseFlash { 0%,55% { background:var(--accent-muted); } 100% { background:transparent; } }
+
+        .font-controls { display:flex; gap:8px; align-items:center; justify-content:center; margin:28px 0 8px; }
+        .font-btn { background:var(--surface); border:1px solid var(--border); color:var(--fg); border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:700; }
+
+        /* Feuille d'actions verset */
+        .sheet-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:900; display:none; }
+        .sheet-backdrop.open { display:block; }
+        .sheet {
+            position:fixed; left:0; right:0; bottom:0; z-index:901;
+            background:var(--surface); border-radius:20px 20px 0 0;
+            padding:20px 20px calc(24px + env(safe-area-inset-bottom));
+            transform:translateY(100%); transition:transform .25s ease;
+            max-height:70vh; overflow-y:auto;
+        }
+        .sheet.open { transform:translateY(0); }
+        .sheet-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 16px; }
+        .sheet-action {
+            display:flex; align-items:center; gap:14px; padding:14px 8px;
+            border-radius:10px; cursor:pointer; font-weight:600;
+        }
+        .sheet-action:active { background:var(--accent-muted); }
+
+        /* Résultats de recherche */
+        .result-item {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius-md); padding:14px; margin-bottom:10px; cursor:pointer;
+        }
+        .result-ref { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--accent); margin-bottom:6px; }
+        .result-text { font-family:var(--font-serif); font-size:15px; line-height:1.6; }
+        .result-text mark { background:var(--accent-muted); color:var(--fg); border-radius:3px; padding:0 2px; font-weight:700; }
+
+        .progress-track { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:12px; }
+        .progress-fill { height:100%; background:var(--accent); width:0; transition:width .2s; }
+
+        .empty-state { text-align:center; color:var(--muted); padding:40px 20px; font-size:14px; line-height:1.6; }
+        .scope-note { font-size:12px; color:var(--muted); line-height:1.6; }
     </style>
 </head>
 <body>
@@ -292,8 +395,9 @@
             <div class="serif" style="font-size: 24px; color: var(--accent); margin-bottom: 32px; font-weight: 700;">Crois en Moi</div>
             <div style="display:flex; flex-direction:column; gap:4px;">
                 <div class="nav-item" data-screen="home" onclick="showScreen('home')">🏠 Accueil</div>
+                <div class="nav-item" data-screen="lecture" onclick="openLecture()">📖 Lecture — La Bible</div>
                 <div class="nav-item" data-screen="chapelet" onclick="showScreen('chapelet')">📿 Chapelet Guidé</div>
-                <div class="nav-item" data-screen="prayers" onclick="showScreen('prayers')">📖 Bibliothèque</div>
+                <div class="nav-item" data-screen="prayers" onclick="showScreen('prayers')">🙏 Bibliothèque de prières</div>
                 <div class="nav-item" data-screen="chants" onclick="showScreen('chants')">🎶 Chants de Messe</div>
                 <div class="nav-item" data-screen="trinity" onclick="showScreen('trinity')">✨ La Trinité</div>
                 <div class="nav-item" data-screen="confession" onclick="showScreen('confession')">⛪ Confession</div>
@@ -320,10 +424,20 @@
                     </div>
                 </div>
 
-                <div class="accent-box">
+                <div class="accent-box" id="daily-verse-card">
                     <div style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--accent); margin-bottom:8px;">Verset du jour</div>
-                    <div class="serif" style="font-size:18px; line-height:1.4;">"Je peux tout en Celui qui me fortifie."</div>
-                    <div style="font-size:11px; margin-top:8px; opacity:0.7;">PHILIPPIENS 4:13</div>
+                    <div class="serif" style="font-size:18px; line-height:1.5;" id="daily-verse-text">« Je peux tout en Celui qui me fortifie. »</div>
+                    <div style="font-size:11px; margin-top:8px; opacity:0.7;" id="daily-verse-ref">PHILIPPIENS 4:13</div>
+                </div>
+
+                <div class="card" onclick="openLecture()">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="font-size:28px;">📖</div>
+                        <div>
+                            <div style="font-weight:700;">Lire la Bible</div>
+                            <div style="font-size:12px; color:var(--muted);">Évangiles, Psaumes et recherche de versets.</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card" onclick="window.open('https://www.google.com/maps/search/église+catholique+near+me', '_blank', 'noopener,noreferrer')">
@@ -424,6 +538,132 @@
                 <div id="chants-list"></div>
             </div>
 
+            <!-- LECTURE — ACCUEIL -->
+            <div id="lecture" class="screen">
+                <h2 class="serif" style="margin-top:4px;">Lecture</h2>
+                <p style="color:var(--muted); margin-top:-10px;">La Parole de Dieu, hors ligne, à portée de main.</p>
+
+                <div class="card" id="resume-card" style="display:none;" onclick="resumeReading()">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="font-size:28px;">↩️</div>
+                        <div>
+                            <div style="font-weight:700;">Reprendre la lecture</div>
+                            <div style="font-size:12px; color:var(--muted);" id="resume-label"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" onclick="openDailyReading()">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="font-size:28px;">🕊️</div>
+                        <div>
+                            <div style="font-weight:700;">Lecture du jour</div>
+                            <div style="font-size:12px; color:var(--muted);" id="daily-reading-label">Parcours continu des Évangiles</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-title">Les Quatre Évangiles</div>
+                <div class="tile-grid">
+                    <div class="tile" onclick="openBook('mt')"><span class="tile-emoji">📗</span><div class="tile-title">Matthieu</div><div class="tile-sub">28 chapitres</div></div>
+                    <div class="tile" onclick="openBook('mc')"><span class="tile-emoji">📘</span><div class="tile-title">Marc</div><div class="tile-sub">16 chapitres</div></div>
+                    <div class="tile" onclick="openBook('lc')"><span class="tile-emoji">📙</span><div class="tile-title">Luc</div><div class="tile-sub">24 chapitres</div></div>
+                    <div class="tile" onclick="openBook('jn')"><span class="tile-emoji">📕</span><div class="tile-title">Jean</div><div class="tile-sub">21 chapitres</div></div>
+                </div>
+
+                <div class="category-title">Explorer</div>
+                <div class="tile-grid">
+                    <div class="tile" onclick="openBooks('all')"><span class="tile-emoji">📖</span><div class="tile-title">Toute la Bible</div><div class="tile-sub">66 livres</div></div>
+                    <div class="tile" onclick="openSearch()"><span class="tile-emoji">🔍</span><div class="tile-title">Chercher un verset</div><div class="tile-sub">Mots ou référence</div></div>
+                    <div class="tile" onclick="openBooks('at')"><span class="tile-emoji">📜</span><div class="tile-title">Ancien Testament</div><div class="tile-sub">39 livres</div></div>
+                    <div class="tile" onclick="openBooks('nt')"><span class="tile-emoji">✝️</span><div class="tile-title">Nouveau Testament</div><div class="tile-sub">27 livres</div></div>
+                    <div class="tile" onclick="openBookmarks()"><span class="tile-emoji">🔖</span><div class="tile-title">Mes signets</div><div class="tile-sub" id="bookmarks-count">0 verset</div></div>
+                    <div class="tile" onclick="openBook('ps')"><span class="tile-emoji">🎵</span><div class="tile-title">Psaumes</div><div class="tile-sub">150 psaumes</div></div>
+                </div>
+
+                <div class="card" style="margin-top:24px; cursor:default;">
+                    <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:8px;">À propos du texte</div>
+                    <div class="scope-note">
+                        Traduction <strong>Ostervald (1996)</strong>, dans le domaine public — 66 livres,
+                        1 189 chapitres, 31 172 versets, entièrement disponibles hors ligne.<br><br>
+                        Les livres deutérocanoniques du canon catholique (Tobie, Judith, Sagesse,
+                        Siracide, Baruch, 1 et 2 Maccabées) ne figurent pas dans cette édition.
+                    </div>
+                </div>
+            </div>
+
+            <!-- LISTE DES LIVRES -->
+            <div id="bible-books" class="screen">
+                <button class="back-btn" onclick="showScreen('lecture')">← Lecture</button>
+                <div class="search-field">
+                    <span style="color:var(--muted);">🔍</span>
+                    <input type="text" id="book-filter" placeholder="Filtrer un livre…" oninput="renderBooks()" autocomplete="off">
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-chip" data-testament="all" onclick="setTestament('all', this)">Tout</div>
+                    <div class="filter-chip" data-testament="at" onclick="setTestament('at', this)">Ancien Testament</div>
+                    <div class="filter-chip" data-testament="nt" onclick="setTestament('nt', this)">Nouveau Testament</div>
+                </div>
+                <div id="books-list"></div>
+            </div>
+
+            <!-- CHAPITRES -->
+            <div id="bible-chapters" class="screen">
+                <button class="back-btn" onclick="backFromChapters()">← Retour</button>
+                <h2 class="serif" id="chapters-title" style="margin-top:0;"></h2>
+                <p style="color:var(--muted); margin-top:-10px; font-size:13px;" id="chapters-sub"></p>
+                <div class="chapter-grid" id="chapters-grid"></div>
+            </div>
+
+            <!-- LECTEUR -->
+            <div id="bible-reader" class="screen">
+                <div class="reader-bar">
+                    <button class="reader-nav" id="reader-prev" onclick="readerGo(-1)">‹</button>
+                    <div class="reader-ref" id="reader-ref" onclick="openChaptersOfCurrent()"></div>
+                    <button class="reader-nav" id="reader-next" onclick="readerGo(1)">›</button>
+                </div>
+                <div id="bible-verses"></div>
+                <div class="font-controls">
+                    <button class="font-btn" onclick="changeFontSize(-1)">A−</button>
+                    <button class="font-btn" onclick="changeFontSize(1)">A+</button>
+                </div>
+                <div style="text-align:center; margin-top:8px;">
+                    <button class="back-btn" onclick="backFromReader()" style="margin:0;">← Retour</button>
+                </div>
+            </div>
+
+            <!-- RECHERCHE -->
+            <div id="bible-search" class="screen">
+                <button class="back-btn" onclick="showScreen('lecture')">← Lecture</button>
+                <div class="search-field">
+                    <span style="color:var(--muted);">🔍</span>
+                    <input type="text" id="search-input" placeholder="Un mot, une phrase ou « Jn 3:16 »"
+                           autocomplete="off" onkeydown="if(event.key==='Enter'){this.blur(); runSearch();}">
+                    <button class="search-clear" onclick="clearSearch()">×</button>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-chip active" data-scope="all" onclick="setScope('all', this)">Toute la Bible</div>
+                    <div class="filter-chip" data-scope="gospels" onclick="setScope('gospels', this)">Évangiles</div>
+                    <div class="filter-chip" data-scope="nt" onclick="setScope('nt', this)">Nouveau T.</div>
+                    <div class="filter-chip" data-scope="at" onclick="setScope('at', this)">Ancien T.</div>
+                </div>
+                <button onclick="runSearch()" style="width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:var(--radius-md); font-weight:700; font-size:15px; cursor:pointer; margin-bottom:16px;">
+                    Rechercher
+                </button>
+                <div id="search-status" style="font-size:13px; color:var(--muted); margin-bottom:12px;"></div>
+                <div id="search-progress" style="display:none;">
+                    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+                </div>
+                <div id="search-results"></div>
+            </div>
+
+            <!-- SIGNETS -->
+            <div id="bible-bookmarks" class="screen">
+                <button class="back-btn" onclick="showScreen('lecture')">← Lecture</button>
+                <h2 class="serif" style="margin-top:0;">Mes signets</h2>
+                <div id="bookmarks-list"></div>
+            </div>
+
             <!-- PRAYER DETAIL -->
             <div id="prayer-detail" class="screen">
                 <button onclick="backToLibrary()" style="background:none; border:none; color:var(--accent); font-weight:700; margin-bottom:20px; cursor:pointer; padding:0; font-size:16px;">← Retour</button>
@@ -484,9 +724,20 @@
                 </div>
             </div>
 
-            <div class="version-footer">Crois en Moi — Version 2.3</div>
+            <div class="version-footer">Crois en Moi — Version 2.4</div>
 
         </div>
+    </div>
+
+    <!-- Feuille d'actions sur un verset -->
+    <div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
+    <div class="sheet" id="verse-sheet">
+        <div class="sheet-handle"></div>
+        <div id="sheet-ref" style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:8px;"></div>
+        <div id="sheet-text" class="serif" style="font-size:16px; line-height:1.6; margin-bottom:20px;"></div>
+        <div class="sheet-action" onclick="sheetToggleBookmark()"><span style="font-size:20px;">🔖</span><span id="sheet-bookmark-label">Ajouter aux signets</span></div>
+        <div class="sheet-action" onclick="sheetCopy()"><span style="font-size:20px;">📋</span><span>Copier le verset</span></div>
+        <div class="sheet-action" onclick="sheetShare()"><span style="font-size:20px;">📤</span><span>Partager</span></div>
     </div>
 
     <script>
@@ -581,7 +832,7 @@
         };
 
         // --- VERSION CHECK ---
-        const APP_VERSION = "2.3";
+        const APP_VERSION = "2.4";
         const VERSION_URL = "https://niakimbo22.github.io/crois-en-moi/version.json";
 
         async function checkForUpdate() {
@@ -606,7 +857,10 @@
         const SCREEN_LABELS = {
             home: '', chapelet: 'Chapelet Guidé', prayers: 'Bibliothèque',
             chants: 'Chants de Messe', trinity: 'La Trinité',
-            confession: 'Confession', 'prayer-detail': ''
+            confession: 'Confession', 'prayer-detail': '',
+            lecture: 'Lecture', 'bible-books': 'Livres de la Bible',
+            'bible-chapters': 'Chapitres', 'bible-reader': 'Sainte Bible',
+            'bible-search': 'Recherche de versets', 'bible-bookmarks': 'Mes signets'
         };
 
         // --- STATE ---
@@ -646,6 +900,7 @@
 
             currentScreen = id;
             if (id === 'chapelet') initRosary();
+            if (id === 'lecture') refreshLecture();
         }
 
         function toggleTheme() {
@@ -782,15 +1037,540 @@
             });
         }
 
+        // ===================== LECTURE / BIBLE =====================
+
+        const BIBLE_PATH = 'bible/';
+        const BIBLE = { index: null, meta: {}, books: {}, norm: {} };
+        const GOSPEL_IDS = ['mt', 'mc', 'lc', 'jn'];
+
+        // Versets du jour (référence : livre, chapitre, verset)
+        const DAILY_VERSES = [
+            ['ph',4,13], ['jn',3,16], ['ps',23,1], ['pr',3,5], ['is',41,10],
+            ['mt',11,28], ['rm',8,28], ['jos',1,9], ['ps',119,105], ['jn',14,6],
+            ['1co',13,4], ['ga',5,22], ['ep',2,8], ['he',11,1], ['jc',1,5],
+            ['1p',5,7], ['ps',46,2], ['mt',6,33], ['jn',15,12], ['rm',12,2],
+            ['2co',12,9], ['ps',27,1], ['is',40,31], ['mt',5,9], ['lc',1,37],
+            ['jr',29,11], ['ps',34,9], ['mc',10,27], ['1jn',4,19], ['col',3,23],
+            ['ps',121,1], ['mt',7,7]
+        ];
+
+        // --- Chargement des données ---
+        async function loadBibleIndex() {
+            if (BIBLE.index) return BIBLE.index;
+            const resp = await fetch(BIBLE_PATH + 'index.json');
+            const data = await resp.json();
+            BIBLE.index = data.books;
+            BIBLE.index.forEach(b => {
+                b.aliases = [b.id, normalize(b.a).replace(/\s/g, ''),
+                             normalize(b.n).replace(/\s/g, ''),
+                             normalize(b.sn).replace(/\s/g, '')];
+                BIBLE.meta[b.id] = b;
+            });
+            return BIBLE.index;
+        }
+
+        async function loadBook(id) {
+            if (BIBLE.books[id]) return BIBLE.books[id];
+            const resp = await fetch(BIBLE_PATH + id + '.json');
+            BIBLE.books[id] = await resp.json();
+            return BIBLE.books[id];
+        }
+
+        function normalize(s) {
+            return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+        }
+
+        function refLabel(bookId, ch, verse) {
+            const m = BIBLE.meta[bookId];
+            const name = m ? m.a : bookId;
+            return verse ? `${name} ${ch},${verse}` : `${name} ${ch}`;
+        }
+
+        // --- Écran Lecture ---
+        function openLecture() { showScreen('lecture'); }
+
+        async function refreshLecture() {
+            try {
+                await loadBibleIndex();
+                refreshResumeCard();
+                refreshDailyReadingLabel();
+                refreshBookmarksCount();
+            } catch (e) { /* Données absentes */ }
+        }
+
+        function refreshResumeCard() {
+            const last = getLastPosition();
+            const card = document.getElementById('resume-card');
+            if (last && BIBLE.meta[last.b]) {
+                card.style.display = 'block';
+                document.getElementById('resume-label').textContent =
+                    `${BIBLE.meta[last.b].n} — chapitre ${last.c}`;
+            } else {
+                card.style.display = 'none';
+            }
+        }
+
+        function resumeReading() {
+            const last = getLastPosition();
+            if (last) openChapter(last.b, last.c, null, 'lecture');
+        }
+
+        // --- Liste des livres ---
+        let currentTestament = 'all';
+
+        async function openBooks(testament) {
+            currentTestament = testament || 'all';
+            await loadBibleIndex();
+            document.getElementById('book-filter').value = '';
+            document.querySelectorAll('#bible-books .filter-chip').forEach(c =>
+                c.classList.toggle('active', c.dataset.testament === currentTestament));
+            renderBooks();
+            showScreen('bible-books');
+        }
+
+        function setTestament(t, el) {
+            currentTestament = t;
+            document.querySelectorAll('#bible-books .filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            renderBooks();
+        }
+
+        function renderBooks() {
+            const container = document.getElementById('books-list');
+            const q = normalize(document.getElementById('book-filter').value.trim());
+            let books = BIBLE.index;
+            if (currentTestament !== 'all') books = books.filter(b => b.t === currentTestament);
+            if (q) books = books.filter(b => b.aliases.some(a => a.includes(q.replace(/\s/g, ''))));
+
+            container.innerHTML = '';
+            if (!books.length) {
+                container.innerHTML = '<div class="empty-state">Aucun livre ne correspond.</div>';
+                return;
+            }
+            let group = null;
+            books.forEach(b => {
+                if (b.g !== group) {
+                    group = b.g;
+                    const t = document.createElement('div');
+                    t.className = 'category-title';
+                    t.textContent = group;
+                    container.appendChild(t);
+                }
+                const row = document.createElement('div');
+                row.className = 'book-row';
+                row.onclick = () => openBook(b.id, 'bible-books');
+                row.innerHTML = `<span class="book-name">${b.n}</span>` +
+                                `<span class="book-meta">${b.ch.length} ch.</span>`;
+                container.appendChild(row);
+            });
+        }
+
+        // --- Chapitres ---
+        let chaptersBackTo = 'lecture';
+        let currentBookId = null;
+
+        async function openBook(id, from) {
+            await loadBibleIndex();
+            chaptersBackTo = from || 'lecture';
+            currentBookId = id;
+            const b = BIBLE.meta[id];
+            document.getElementById('chapters-title').textContent = b.n;
+            document.getElementById('chapters-sub').textContent =
+                `${b.ch.length} chapitre${b.ch.length > 1 ? 's' : ''} · ${b.t === 'at' ? 'Ancien' : 'Nouveau'} Testament`;
+            const grid = document.getElementById('chapters-grid');
+            grid.innerHTML = '';
+            b.ch.forEach((_, i) => {
+                const cell = document.createElement('div');
+                cell.className = 'chapter-cell';
+                cell.textContent = i + 1;
+                cell.onclick = () => openChapter(id, i + 1, null, 'bible-chapters');
+                grid.appendChild(cell);
+            });
+            showScreen('bible-chapters');
+        }
+
+        function backFromChapters() { showScreen(chaptersBackTo); }
+        function openChaptersOfCurrent() {
+            if (readerState.book) openBook(readerState.book, chaptersBackTo);
+        }
+
+        // --- Lecteur ---
+        let readerState = { book: null, chapter: 1, backTo: 'lecture' };
+
+        async function openChapter(bookId, chapter, targetVerse, from) {
+            await loadBibleIndex();
+            const meta = BIBLE.meta[bookId];
+            if (!meta) return;
+            chapter = Math.min(Math.max(1, chapter), meta.ch.length);
+            readerState = { book: bookId, chapter, backTo: from || readerState.backTo || 'lecture' };
+
+            const verses = document.getElementById('bible-verses');
+            verses.innerHTML = '<div class="empty-state">Ouverture du texte…</div>';
+            showScreen('bible-reader');
+
+            const book = await loadBook(bookId);
+            const marks = getBookmarks();
+            const chapterVerses = book[chapter - 1] || [];
+
+            document.getElementById('reader-ref').textContent = `${meta.n} ${chapter}`;
+            document.getElementById('reader-prev').disabled = (chapter === 1 && bookIndexOf(bookId) === 0);
+            document.getElementById('reader-next').disabled =
+                (chapter === meta.ch.length && bookIndexOf(bookId) === BIBLE.index.length - 1);
+
+            verses.innerHTML = chapterVerses.map((text, i) => {
+                const n = i + 1;
+                const marked = marks.some(m => m.b === bookId && m.c === chapter && m.v === n);
+                return `<span class="verse${marked ? ' bookmarked' : ''}" id="v-${n}" onclick="openSheet('${bookId}',${chapter},${n})">` +
+                       `<span class="verse-num">${n}</span>${escapeHtml(text)}</span>`;
+            }).join('');
+
+            saveLastPosition(bookId, chapter);
+
+            const container = document.querySelector('.screens-container');
+            if (targetVerse) {
+                const el = document.getElementById('v-' + targetVerse);
+                if (el) {
+                    el.classList.add('target');
+                    setTimeout(() => container.scrollTop = Math.max(0, el.offsetTop - 120), 60);
+                }
+            } else {
+                container.scrollTop = 0;
+            }
+        }
+
+        function bookIndexOf(id) { return BIBLE.index.findIndex(b => b.id === id); }
+
+        function readerGo(delta) {
+            const meta = BIBLE.meta[readerState.book];
+            let ch = readerState.chapter + delta;
+            if (ch >= 1 && ch <= meta.ch.length) return openChapter(readerState.book, ch);
+            // Passage au livre précédent / suivant
+            const idx = bookIndexOf(readerState.book) + delta;
+            if (idx < 0 || idx >= BIBLE.index.length) return;
+            const nextBook = BIBLE.index[idx];
+            openChapter(nextBook.id, delta > 0 ? 1 : nextBook.ch.length);
+        }
+
+        function backFromReader() { showScreen(readerState.backTo || 'lecture'); }
+
+        function changeFontSize(delta) {
+            let size = parseInt(localStorage.getItem('crois-bible-size') || '18', 10) + delta * 2;
+            size = Math.min(30, Math.max(14, size));
+            applyFontSize(size);
+            try { localStorage.setItem('crois-bible-size', size); } catch (e) {}
+        }
+
+        function applyFontSize(size) {
+            document.documentElement.style.setProperty('--reader-size', size + 'px');
+        }
+
+        // --- Position & signets (stockage local) ---
+        function saveLastPosition(b, c) {
+            try { localStorage.setItem('crois-bible-last', JSON.stringify({ b, c })); } catch (e) {}
+        }
+        function getLastPosition() {
+            try { return JSON.parse(localStorage.getItem('crois-bible-last') || 'null'); } catch (e) { return null; }
+        }
+        function getBookmarks() {
+            try { return JSON.parse(localStorage.getItem('crois-bible-marks') || '[]'); } catch (e) { return []; }
+        }
+        function saveBookmarks(list) {
+            try { localStorage.setItem('crois-bible-marks', JSON.stringify(list)); } catch (e) {}
+            refreshBookmarksCount();
+        }
+        function refreshBookmarksCount() {
+            const n = getBookmarks().length;
+            const el = document.getElementById('bookmarks-count');
+            if (el) el.textContent = n + ' verset' + (n > 1 ? 's' : '');
+        }
+
+        // --- Feuille d'actions ---
+        let sheetTarget = null;
+
+        function openSheet(bookId, chapter, verse) {
+            const text = (BIBLE.books[bookId] || [])[chapter - 1][verse - 1];
+            sheetTarget = { b: bookId, c: chapter, v: verse, text };
+            document.getElementById('sheet-ref').textContent = refLabel(bookId, chapter, verse);
+            document.getElementById('sheet-text').textContent = text;
+            const isMarked = getBookmarks().some(m => m.b === bookId && m.c === chapter && m.v === verse);
+            document.getElementById('sheet-bookmark-label').textContent =
+                isMarked ? 'Retirer des signets' : 'Ajouter aux signets';
+            document.getElementById('verse-sheet').classList.add('open');
+            document.getElementById('sheet-backdrop').classList.add('open');
+        }
+
+        function closeSheet() {
+            document.getElementById('verse-sheet').classList.remove('open');
+            document.getElementById('sheet-backdrop').classList.remove('open');
+        }
+
+        function sheetToggleBookmark() {
+            if (!sheetTarget) return;
+            const { b, c, v, text } = sheetTarget;
+            let marks = getBookmarks();
+            const i = marks.findIndex(m => m.b === b && m.c === c && m.v === v);
+            if (i >= 0) marks.splice(i, 1);
+            else marks.unshift({ b, c, v, text, ts: Date.now() });
+            saveBookmarks(marks);
+            const el = document.getElementById('v-' + v);
+            if (el && readerState.book === b && readerState.chapter === c) el.classList.toggle('bookmarked', i < 0);
+            closeSheet();
+        }
+
+        function verseAsText() {
+            return `« ${sheetTarget.text} »\n${refLabel(sheetTarget.b, sheetTarget.c, sheetTarget.v)} — Ostervald`;
+        }
+
+        function sheetCopy() {
+            const txt = verseAsText();
+            if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {});
+            closeSheet();
+            alert('Verset copié.');
+        }
+
+        function sheetShare() {
+            const txt = verseAsText();
+            if (navigator.share) {
+                navigator.share({ text: txt }).catch(() => {});
+                closeSheet();
+            } else {
+                sheetCopy();
+            }
+        }
+
+        // --- Signets ---
+        async function openBookmarks() {
+            await loadBibleIndex();
+            const marks = getBookmarks();
+            const list = document.getElementById('bookmarks-list');
+            if (!marks.length) {
+                list.innerHTML = '<div class="empty-state">Aucun signet pour le moment.<br>' +
+                    'Touchez un verset pendant la lecture pour le sauvegarder ici.</div>';
+            } else {
+                list.innerHTML = marks.map(m =>
+                    `<div class="result-item" onclick="openChapter('${m.b}',${m.c},${m.v},'bible-bookmarks')">` +
+                    `<div class="result-ref">${refLabel(m.b, m.c, m.v)}</div>` +
+                    `<div class="result-text">${escapeHtml(m.text)}</div></div>`).join('') +
+                    `<button class="font-btn" style="width:100%; margin-top:12px;" onclick="clearBookmarks()">Tout effacer</button>`;
+            }
+            showScreen('bible-bookmarks');
+        }
+
+        function clearBookmarks() {
+            if (!confirm('Supprimer tous les signets ?')) return;
+            saveBookmarks([]);
+            openBookmarks();
+        }
+
+        // --- Recherche ---
+        let searchScope = 'all';
+
+        async function openSearch() {
+            await loadBibleIndex();
+            showScreen('bible-search');
+            setTimeout(() => document.getElementById('search-input').focus(), 250);
+        }
+
+        function setScope(scope, el) {
+            searchScope = scope;
+            document.querySelectorAll('#bible-search .filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('search-results').innerHTML = '';
+            document.getElementById('search-status').textContent = '';
+        }
+
+        function scopeBooks() {
+            if (searchScope === 'gospels') return BIBLE.index.filter(b => GOSPEL_IDS.includes(b.id));
+            if (searchScope === 'at' || searchScope === 'nt') return BIBLE.index.filter(b => b.t === searchScope);
+            return BIBLE.index;
+        }
+
+        // Reconnaît « Jn 3:16 », « Jean 3 16 », « Psaume 23 », « 1 Co 13 »
+        function parseReference(query) {
+            const m = query.trim().match(/^((?:[1-3]\s*)?[^\d]+?)\s*(\d+)(?:\s*[:.,\s]\s*(\d+))?$/);
+            if (!m) return null;
+            const key = normalize(m[1]).replace(/[\s.]/g, '');
+            if (!key) return null;
+            const book = BIBLE.index.find(b => b.aliases.some(a => a === key)) ||
+                         BIBLE.index.find(b => b.aliases.some(a => a.startsWith(key)));
+            if (!book) return null;
+            const ch = parseInt(m[2], 10);
+            if (ch < 1 || ch > book.ch.length) return null;
+            const v = m[3] ? parseInt(m[3], 10) : null;
+            if (v && v > book.ch[ch - 1]) return null;
+            return { book: book.id, chapter: ch, verse: v };
+        }
+
+        // Regex insensible à la casse et aux accents
+        const ACCENTS = { a:'aàâä', c:'cç', e:'eéèêë', i:'iîï', o:'oôö', u:'uùûü', y:'yÿ', n:'nñ' };
+        function accentRegex(term) {
+            const pattern = term.split('').map(ch => {
+                if (/[a-z]/.test(ch) && ACCENTS[ch]) return '[' + ACCENTS[ch] + ACCENTS[ch].toUpperCase() + ']';
+                if (/[a-z]/i.test(ch)) return ch;
+                return ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }).join('');
+            return new RegExp(pattern, 'gi');
+        }
+
+        async function ensureBooksLoaded(books, onProgress) {
+            const missing = books.filter(b => !BIBLE.books[b.id]);
+            let done = 0;
+            onProgress(0, missing.length);
+            for (let i = 0; i < missing.length; i += 8) {
+                await Promise.all(missing.slice(i, i + 8).map(async b => {
+                    await loadBook(b.id);
+                    onProgress(++done, missing.length);
+                }));
+            }
+        }
+
+        function normalizedBook(id) {
+            if (!BIBLE.norm[id]) {
+                BIBLE.norm[id] = BIBLE.books[id].map(ch => ch.map(normalize));
+            }
+            return BIBLE.norm[id];
+        }
+
+        async function runSearch() {
+            const raw = document.getElementById('search-input').value.trim();
+            const status = document.getElementById('search-status');
+            const results = document.getElementById('search-results');
+            results.innerHTML = '';
+            if (raw.length < 2) {
+                status.textContent = 'Saisissez au moins 2 caractères.';
+                return;
+            }
+
+            // 1) Référence directe ?
+            const ref = parseReference(raw);
+            if (ref) {
+                status.textContent = '';
+                return openChapter(ref.book, ref.chapter, ref.verse, 'bible-search');
+            }
+
+            // 2) Recherche plein texte
+            const terms = normalize(raw).split(/\s+/).filter(t => t.length > 1);
+            if (!terms.length) {
+                status.textContent = 'Saisissez au moins 2 caractères.';
+                return;
+            }
+
+            const books = scopeBooks();
+            const progress = document.getElementById('search-progress');
+            const fill = document.getElementById('progress-fill');
+            progress.style.display = 'block';
+            status.textContent = 'Préparation du texte…';
+
+            await ensureBooksLoaded(books, (done, total) => {
+                fill.style.width = total ? (done / total * 100) + '%' : '100%';
+                if (total) status.textContent = `Chargement du texte… ${done}/${total} livres`;
+            });
+            progress.style.display = 'none';
+
+            const found = [];
+            const LIMIT = 400;
+            for (const b of books) {
+                const norm = normalizedBook(b.id);
+                const plain = BIBLE.books[b.id];
+                for (let c = 0; c < norm.length; c++) {
+                    for (let v = 0; v < norm[c].length; v++) {
+                        const text = norm[c][v];
+                        let ok = true;
+                        for (const t of terms) { if (!text.includes(t)) { ok = false; break; } }
+                        if (ok) found.push({ b: b.id, c: c + 1, v: v + 1, text: plain[c][v] });
+                    }
+                }
+                if (found.length > 5000) break;
+            }
+
+            if (!found.length) {
+                status.textContent = `Aucun résultat pour « ${raw} ».`;
+                results.innerHTML = '<div class="empty-state">Essayez un autre mot, ou une référence comme « Jn 3:16 ».</div>';
+                return;
+            }
+
+            const shown = found.slice(0, LIMIT);
+            status.textContent = `${found.length} verset${found.length > 1 ? 's' : ''} trouvé${found.length > 1 ? 's' : ''}` +
+                (found.length > LIMIT ? ` — les ${LIMIT} premiers sont affichés.` : '.');
+
+            const regexes = terms.map(accentRegex);
+            results.innerHTML = shown.map(r => {
+                let html = escapeHtml(r.text);
+                regexes.forEach(re => { html = html.replace(re, m => `<mark>${m}</mark>`); });
+                return `<div class="result-item" onclick="openChapter('${r.b}',${r.c},${r.v},'bible-search')">` +
+                       `<div class="result-ref">${refLabel(r.b, r.c, r.v)}</div>` +
+                       `<div class="result-text">${html}</div></div>`;
+            }).join('');
+        }
+
+        // --- Verset du jour & lecture du jour ---
+        function dayOfYear(d) {
+            return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+        }
+
+        function gospelPlan() {
+            const seq = [];
+            GOSPEL_IDS.forEach(id => {
+                const meta = BIBLE.meta[id];
+                if (meta) meta.ch.forEach((_, i) => seq.push({ b: id, c: i + 1 }));
+            });
+            return seq;
+        }
+
+        function todaysReading() {
+            const seq = gospelPlan();
+            if (!seq.length) return null;
+            return seq[dayOfYear(new Date()) % seq.length];
+        }
+
+        function refreshDailyReadingLabel() {
+            const r = todaysReading();
+            if (!r) return;
+            document.getElementById('daily-reading-label').textContent =
+                `${BIBLE.meta[r.b].n} — chapitre ${r.c}`;
+        }
+
+        function openDailyReading() {
+            const r = todaysReading();
+            if (r) openChapter(r.b, r.c, null, 'lecture');
+        }
+
+        async function initDailyVerse() {
+            try {
+                await loadBibleIndex();
+                const [b, c, v] = DAILY_VERSES[dayOfYear(new Date()) % DAILY_VERSES.length];
+                const book = await loadBook(b);
+                const text = book[c - 1][v - 1];
+                document.getElementById('daily-verse-text').textContent = `« ${text} »`;
+                document.getElementById('daily-verse-ref').textContent =
+                    `${BIBLE.meta[b].sn.toUpperCase()} ${c},${v}`;
+                const card = document.getElementById('daily-verse-card');
+                card.style.cursor = 'pointer';
+                card.onclick = () => openChapter(b, c, v, 'home');
+            } catch (e) { /* Données indisponibles : le verset par défaut reste affiché */ }
+        }
+
         // --- INIT ---
         window.onload = () => {
             try {
                 const saved = localStorage.getItem('crois-theme');
                 if (saved) document.documentElement.setAttribute('data-theme', saved);
             } catch(e){}
+            try {
+                applyFontSize(parseInt(localStorage.getItem('crois-bible-size') || '18', 10));
+            } catch(e){}
             initLiturgical();
             renderPrayers();
             renderChants();
+            initDailyVerse();
             // Mark home as active on load
             showScreen('home');
             setTimeout(closeSplash, 2500);
