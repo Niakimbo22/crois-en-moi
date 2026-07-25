@@ -727,7 +727,7 @@
                 </div>
             </div>
 
-            <div class="version-footer">Crois en Moi — Version 2.5</div>
+            <div class="version-footer">Crois en Moi — Version 2.6</div>
 
         </div>
     </div>
@@ -847,14 +847,33 @@
         };
 
         // --- VERSION CHECK ---
-        const APP_VERSION = "2.5";
+        const APP_VERSION = "2.6";
         const VERSION_URL = "https://niakimbo22.github.io/crois-en-moi/version.json";
 
+        // Compare « 2.10 » et « 2.9 » correctement, nombre par nombre.
+        function isNewerVersion(published, installed) {
+            const a = String(published).split('.'), b = String(installed).split('.');
+            for (let i = 0; i < Math.max(a.length, b.length); i++) {
+                const l = parseInt(a[i] || '0', 10) || 0, r = parseInt(b[i] || '0', 10) || 0;
+                if (l !== r) return l > r;
+            }
+            return false;
+        }
+
+        function hasNativeAutoUpdate() {
+            try {
+                return !!(window.Android && typeof window.Android.hasAutoUpdate === 'function'
+                          && window.Android.hasAutoUpdate());
+            } catch (e) { return false; }
+        }
+
         async function checkForUpdate() {
+            // L'application se met à jour toute seule : rien à demander ici.
+            if (hasNativeAutoUpdate()) return;
             try {
                 const resp = await fetch(VERSION_URL + "?t=" + Date.now());
                 const data = await resp.json();
-                if (data.version && parseFloat(data.version) > parseFloat(APP_VERSION) &&
+                if (data.version && isNewerVersion(data.version, APP_VERSION) &&
                     window.Android && typeof window.Android.downloadAndInstall === 'function') {
                     const overlay = document.getElementById('update-overlay');
                     document.getElementById('update-version-label').textContent =
