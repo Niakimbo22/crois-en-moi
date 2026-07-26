@@ -345,6 +345,9 @@
         .result-ref { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--accent); margin-bottom:6px; }
         .result-text { font-family:var(--font-serif); font-size:15px; line-height:1.6; }
         .result-text mark { background:var(--accent-muted); color:var(--fg); border-radius:3px; padding:0 2px; font-weight:700; }
+        .result-item.reference { border-color:var(--accent); }
+        .search-hint { font-size:12px; line-height:1.6; color:var(--muted); margin:-4px 0 16px; }
+        .search-hint b { color:var(--accent); font-weight:700; }
 
         .progress-track { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:12px; }
         .progress-fill { height:100%; background:var(--accent); width:0; transition:width .2s; }
@@ -640,15 +643,23 @@
                 <button class="back-btn" onclick="showScreen('lecture')">← Lecture</button>
                 <div class="search-field">
                     <span style="color:var(--muted);">🔍</span>
-                    <input type="text" id="search-input" placeholder="Un mot, une phrase ou « Jn 3:16 »"
+                    <input type="text" id="search-input" placeholder="Un mot, une expression ou « Jn 3:16 »"
                            autocomplete="off" onkeydown="if(event.key==='Enter'){this.blur(); runSearch();}">
                     <button class="search-clear" onclick="clearSearch()">×</button>
                 </div>
-                <div class="filter-bar">
+                <div class="filter-bar" id="search-scope-bar">
                     <div class="filter-chip active" data-scope="all" onclick="setScope('all', this)">Toute la Bible</div>
                     <div class="filter-chip" data-scope="gospels" onclick="setScope('gospels', this)">Évangiles</div>
                     <div class="filter-chip" data-scope="nt" onclick="setScope('nt', this)">Nouveau T.</div>
                     <div class="filter-chip" data-scope="at" onclick="setScope('at', this)">Ancien T.</div>
+                </div>
+                <div class="filter-bar" id="search-mode-bar" style="padding-top:0;">
+                    <div class="filter-chip active" data-mode="exact" onclick="setSearchMode('exact', this)">Mots exacts</div>
+                    <div class="filter-chip" data-mode="partial" onclick="setSearchMode('partial', this)">Contient</div>
+                </div>
+                <div class="search-hint">
+                    <b>Un verset :</b> Jn 3:16 · John 3:16 · 1 Co 13,4-7 · Psaume 23<br>
+                    <b>Des mots :</b> cherchés en entier · <b>"entre guillemets"</b> = expression exacte · <b>aim*</b> = toutes les formes
                 </div>
                 <button onclick="runSearch()" style="width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:var(--radius-md); font-weight:700; font-size:15px; cursor:pointer; margin-bottom:16px;">
                     Rechercher
@@ -727,7 +738,7 @@
                 </div>
             </div>
 
-            <div class="version-footer">Crois en Moi — Version 2.7</div>
+            <div class="version-footer">Crois en Moi — Version 2.8</div>
 
         </div>
     </div>
@@ -847,7 +858,7 @@
         };
 
         // --- VERSION CHECK ---
-        const APP_VERSION = "2.7";
+        const APP_VERSION = "2.8";
         const VERSION_URL = "https://niakimbo22.github.io/crois-en-moi/version.json";
 
         // Compare « 2.10 » et « 2.9 » correctement, nombre par nombre.
@@ -1020,7 +1031,7 @@
         // --- PRAYERS FILTER ---
         function filterPrayers(tag, el) {
             currentFilter = tag;
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('#prayers .filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
             renderPrayers();
         }
@@ -1077,6 +1088,36 @@
         const BIBLE = { index: null, meta: {}, books: {}, norm: {} };
         const GOSPEL_IDS = ['mt', 'mc', 'lc', 'jn'];
 
+        // Noms anglais et abréviations courantes, en plus du nom français et du
+        // sigle déjà présents dans index.js : « John 4:12 » doit donner Jean 4,12.
+        const BOOK_ALIASES = {
+            gn:'genesis gen ge', ex:'exodus exod exo', lv:'leviticus lev', nb:'numbers num nu',
+            dt:'deuteronomy deut deu', jos:'joshua josh', jg:'judges judg jdg', rt:'ruth ru',
+            '1s':'1samuel 1sam 1sa', '2s':'2samuel 2sam 2sa',
+            '1r':'1kings 1kgs 1ki', '2r':'2kings 2kgs 2ki',
+            '1ch':'1chronicles 1chron 1chr', '2ch':'2chronicles 2chron 2chr',
+            esd:'ezra ezr', ne:'nehemiah neh', est:'esther esth',
+            jb:'job', ps:'psalms psalm psa pss psaume', pr:'proverbs prov prv proverbe',
+            qo:'ecclesiastes eccl ecc qohelet ecclesiaste',
+            ct:'songofsongs songofsolomon song cantique cantiques',
+            is:'isaiah isa esaie', jr:'jeremiah jer', lm:'lamentations lam',
+            ez:'ezekiel ezek eze', dn:'daniel dan', os:'hosea hos', jl:'joel joe',
+            am:'amos amo', ab:'obadiah obad oba', jon:'jonah', mi:'micah mic',
+            na:'nahum nah nahoum', ha:'habakkuk hab habacuc', so:'zephaniah zeph zep',
+            ag:'haggai hag', za:'zechariah zech zec zac', ml:'malachi mal',
+            mt:'matthew matt mat', mc:'mark mrk mk', lc:'luke luk lk', jn:'john joh jhn',
+            ac:'acts act', rm:'romans rom ro',
+            '1co':'1corinthians 1cor', '2co':'2corinthians 2cor',
+            ga:'galatians gal', ep:'ephesians eph', ph:'philippians phil php',
+            col:'colossians', '1th':'1thessalonians 1thess 1thes',
+            '2th':'2thessalonians 2thess 2thes',
+            '1tm':'1timothy 1tim 1ti', '2tm':'2timothy 2tim 2ti', tt:'titus tit',
+            phm:'philemon phlm', he:'hebrews heb', jc:'james jas jam',
+            '1p':'1peter 1pet 1pe', '2p':'2peter 2pet 2pe',
+            '1jn':'1john 1joh', '2jn':'2john 2joh', '3jn':'3john 3joh',
+            jude:'jud', ap:'revelation rev apo apoc'
+        };
+
         // Versets du jour (référence : livre, chapitre, verset)
         const DAILY_VERSES = [
             ['ph',4,13], ['jn',3,16], ['ps',23,1], ['pr',3,5], ['is',41,10],
@@ -1120,9 +1161,8 @@
             if (!indexPayload) throw new Error('Index biblique illisible');
             BIBLE.index = indexPayload.books;
             BIBLE.index.forEach(b => {
-                b.aliases = [b.id, normalize(b.a).replace(/\s/g, ''),
-                             normalize(b.n).replace(/\s/g, ''),
-                             normalize(b.sn).replace(/\s/g, '')];
+                const extra = (BOOK_ALIASES[b.id] || '').split(' ').filter(Boolean);
+                b.aliases = [...new Set([b.id, b.a, b.n, b.sn, ...extra].map(refKey).filter(Boolean))];
                 BIBLE.meta[b.id] = b;
             });
             return BIBLE.index;
@@ -1145,8 +1185,17 @@
                   ((err && err.message) ? err.message : err));
         }
 
+        // Minuscules, sans accents, apostrophes et ligatures unifi\u00e9es : \u00ab L'\u00c9ternel \u00bb
+        // et \u00ab leternel \u00bb se comparent alors caract\u00e8re pour caract\u00e8re.
         function normalize(s) {
-            return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+                    .replace(/[\u2018\u2019\u201b]/g, "'")
+                    .replace(/\u0153/g, 'oe').replace(/\u00e6/g, 'ae');
+        }
+
+        // Cl\u00e9 de comparaison d'un nom de livre : \u00ab 1 Co. \u00bb \u2192 \u00ab 1co \u00bb
+        function refKey(s) {
+            return normalize(String(s)).replace(/[^a-z0-9]/g, '');
         }
 
         function escapeHtml(s) {
@@ -1210,10 +1259,10 @@
 
         function renderBooks() {
             const container = document.getElementById('books-list');
-            const q = normalize(document.getElementById('book-filter').value.trim());
+            const q = refKey(document.getElementById('book-filter').value);
             let books = BIBLE.index;
             if (currentTestament !== 'all') books = books.filter(b => b.t === currentTestament);
-            if (q) books = books.filter(b => b.aliases.some(a => a.includes(q.replace(/\s/g, ''))));
+            if (q) books = books.filter(b => b.aliases.some(a => a.includes(q)));
 
             container.innerHTML = '';
             if (!books.length) {
@@ -1440,6 +1489,8 @@
 
         // --- Recherche ---
         let searchScope = 'all';
+        let searchMode = 'exact';   // « exact » : mots entiers ; « partial » : morceaux de mots
+        let lastSearch = '';
 
         async function openSearch() {
             try { await loadBibleIndex(); } catch (e) { return reportDataError(e); }
@@ -1447,13 +1498,25 @@
             setTimeout(() => document.getElementById('search-input').focus(), 250);
         }
 
-        function setScope(scope, el) {
-            searchScope = scope;
-            document.querySelectorAll('#bible-search .filter-chip').forEach(c => c.classList.remove('active'));
+        function selectChip(barId, el) {
+            document.querySelectorAll('#' + barId + ' .filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
         }
 
+        function setScope(scope, el) {
+            searchScope = scope;
+            selectChip('search-scope-bar', el);
+            if (lastSearch) runSearch();
+        }
+
+        function setSearchMode(mode, el) {
+            searchMode = mode;
+            selectChip('search-mode-bar', el);
+            if (lastSearch) runSearch();
+        }
+
         function clearSearch() {
+            lastSearch = '';
             document.getElementById('search-input').value = '';
             document.getElementById('search-results').innerHTML = '';
             document.getElementById('search-status').textContent = '';
@@ -1465,31 +1528,120 @@
             return BIBLE.index;
         }
 
-        // Reconnaît « Jn 3:16 », « Jean 3 16 », « Psaume 23 », « 1 Co 13 »
-        function parseReference(query) {
-            const m = query.trim().match(/^((?:[1-3]\s*)?[^\d]+?)\s*(\d+)(?:\s*[:.,\s]\s*(\d+))?$/);
-            if (!m) return null;
-            const key = normalize(m[1]).replace(/[\s.]/g, '');
+        // Retrouve un livre depuis son nom écrit : « Jn », « Jean », « John »,
+        // « 1 Co », « I Corinthiens », « Psaume »… puis, à défaut, par son début.
+        function findBook(name, exactOnly) {
+            const key = refKey(name);
             if (!key) return null;
-            const book = BIBLE.index.find(b => b.aliases.some(a => a === key)) ||
-                         BIBLE.index.find(b => b.aliases.some(a => a.startsWith(key)));
-            if (!book) return null;
-            const ch = parseInt(m[2], 10);
-            if (ch < 1 || ch > book.ch.length) return null;
-            const v = m[3] ? parseInt(m[3], 10) : null;
-            if (v && v > book.ch[ch - 1]) return null;
-            return { book: book.id, chapter: ch, verse: v };
+            const lookup = k => {
+                if (!k) return null;
+                const exact = BIBLE.index.find(b => b.aliases.includes(k));
+                if (exact || exactOnly) return exact || null;
+                if (k.length < 2) return null;
+                return BIBLE.index.find(b => b.aliases.some(a => a.startsWith(k))) || null;
+            };
+            let book = lookup(key);
+            if (book) return book;
+            // Chiffres romains : « II Rois », « I Corinthiens »
+            const roman = key.match(/^(i{1,3})([a-z].*)$/);
+            if (roman) book = lookup(roman[1].length + roman[2]);
+            return book;
         }
 
-        // Regex insensible à la casse et aux accents
+        // Reconnaît « Jn 3:16 », « John 3:16 », « Jean 3 16 », « 1 Co 13,4-7 », « Psaume 23 ».
+        // Renvoie { book, chapter, verse, verseEnd } ou { error } si la référence
+        // désigne un livre connu mais un chapitre / un verset qui n'existe pas.
+        function parseReference(query) {
+            const q = normalize(query).trim();
+            const m = q.match(/^([1-3]?\s*[^0-9]{1,40}?)\s*(\d{1,3})(?:\s*[:.,;]\s*|\s+)?(\d{1,3})?(?:\s*[-–—]\s*(\d{1,3}))?$/);
+            if (!m) return null;
+            const book = findBook(m[1]);
+            if (!book) return null;
+
+            const ch = parseInt(m[2], 10);
+            if (!ch || ch > book.ch.length) {
+                return { error: `${book.n} compte ${book.ch.length} chapitre${book.ch.length > 1 ? 's' : ''}.` };
+            }
+            const total = book.ch[ch - 1];
+            const v = m[3] ? parseInt(m[3], 10) : null;
+            if (v !== null && (v < 1 || v > total)) {
+                return { error: `${book.a} ${ch} compte ${total} verset${total > 1 ? 's' : ''}.` };
+            }
+            let end = m[4] ? parseInt(m[4], 10) : null;
+            if (end !== null && v !== null) end = Math.min(Math.max(end, v), total);
+            return { book: book.id, chapter: ch, verse: v, verseEnd: end };
+        }
+
+        // --- Analyse des mots cherchés ---
+        // Un terme = un mot, une "expression entre guillemets", ou une racine
+        // suivie de * . Tous les termes doivent être présents dans le verset.
+        function parseTerms(raw) {
+            const specs = [];
+            const re = /"([^"]*)"|(\S+)/g;
+            let m;
+            while ((m = re.exec(raw)) !== null) {
+                const piece = (m[1] !== undefined ? m[1] : m[2]).trim();
+                if (!piece) continue;
+                const words = normalize(piece).split(/[^a-z0-9]+/).filter(Boolean);
+                if (!words.length) continue;
+                specs.push({
+                    words,
+                    prefix: /\*$/.test(piece),
+                    label: piece.replace(/\*$/, '')
+                });
+            }
+            return specs;
+        }
+
+        // Test sur le texte normalisé : mot entier par défaut, morceau de mot en
+        // mode « Contient ». Une expression admet apostrophe ou tiret entre ses mots.
+        function buildMatchers(specs, mode) {
+            return specs.map(s => {
+                const body = s.words.join('[^a-z0-9]+');
+                const src = mode === 'exact'
+                    ? '\\b' + body + (s.prefix ? '[a-z0-9]*' : '') + '\\b'
+                    : body;
+                return { re: new RegExp(src), first: s.words[0] };
+            });
+        }
+
+        // Surlignage : le texte affiché garde ses accents et ses majuscules,
+        // il faut donc une seconde expression tolérante aux accents.
         const ACCENTS = { a:'aàâä', c:'cç', e:'eéèêë', i:'iîï', o:'oôö', u:'uùûü', y:'yÿ', n:'nñ' };
-        function accentRegex(term) {
-            const pattern = term.split('').map(ch => {
-                if (/[a-z]/.test(ch) && ACCENTS[ch]) return '[' + ACCENTS[ch] + ACCENTS[ch].toUpperCase() + ']';
-                if (/[a-z]/i.test(ch)) return ch;
-                return ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            }).join('');
-            return new RegExp(pattern, 'gi');
+        const WORD_CH = '0-9A-Za-zÀ-ÖØ-öø-ÿ';
+        function accentChar(ch) {
+            if (ACCENTS[ch]) return '[' + ACCENTS[ch] + ACCENTS[ch].toUpperCase() + ']';
+            if (/[a-z]/.test(ch)) return '[' + ch + ch.toUpperCase() + ']';
+            return ch;
+        }
+        // « coeur » doit aussi surligner « cœur »
+        function accentPattern(word) {
+            let out = '';
+            for (let i = 0; i < word.length; i++) {
+                const pair = word.substr(i, 2);
+                if (pair === 'oe') { out += '(?:' + accentChar('o') + accentChar('e') + '|[œŒ])'; i++; continue; }
+                if (pair === 'ae') { out += '(?:' + accentChar('a') + accentChar('e') + '|[æÆ])'; i++; continue; }
+                out += accentChar(word[i]);
+            }
+            return out;
+        }
+        function buildHighlighters(specs, mode) {
+            const sep = '[^' + WORD_CH + ']+';
+            return specs.map(s => {
+                const body = s.words.map(accentPattern).join(sep);
+                const src = mode === 'exact'
+                    ? '(^|[^' + WORD_CH + '])(' + body + (s.prefix ? '[' + WORD_CH + ']*' : '') + ')(?![' + WORD_CH + '])'
+                    : '()(' + body + ')';
+                return new RegExp(src, 'g');
+            });
+        }
+
+        function highlight(text, highlighters) {
+            let html = escapeHtml(text);
+            highlighters.forEach(re => {
+                html = html.replace(re, (all, before, word) => before + '<mark>' + word + '</mark>');
+            });
+            return html;
         }
 
         async function ensureBooksLoaded(books, onProgress) {
@@ -1511,30 +1663,68 @@
             return BIBLE.norm[id];
         }
 
+        // Affiche le verset demandé (ou la tranche de versets) sans quitter la
+        // recherche : « John 4:12 » doit montrer Jean 4,12 tout de suite.
+        async function showReference(ref) {
+            const status = document.getElementById('search-status');
+            const results = document.getElementById('search-results');
+            const meta = BIBLE.meta[ref.book];
+
+            status.textContent = 'Ouverture de la référence…';
+            let book;
+            try { book = await loadBook(ref.book); }
+            catch (e) { status.textContent = 'Le texte biblique n\'a pas pu être chargé.'; return reportDataError(e); }
+
+            const chapterVerses = book[ref.chapter - 1] || [];
+            const first = ref.verse;
+            const last = Math.min(ref.verseEnd || first, chapterVerses.length);
+
+            const cards = [];
+            for (let v = first; v <= last; v++) {
+                cards.push(`<div class="result-item reference" onclick="openChapter('${ref.book}',${ref.chapter},${v},'bible-search')">` +
+                           `<div class="result-ref">${refLabel(ref.book, ref.chapter, v)}</div>` +
+                           `<div class="result-text">${escapeHtml(chapterVerses[v - 1] || '')}</div></div>`);
+            }
+            status.textContent = `${meta.n} ${ref.chapter},${first}${last > first ? '-' + last : ''}`;
+            results.innerHTML = cards.join('') +
+                `<button class="font-btn" style="width:100%; margin-top:12px;" ` +
+                `onclick="openChapter('${ref.book}',${ref.chapter},${first},'bible-search')">` +
+                `Lire ${meta.sn} ${ref.chapter} en entier</button>`;
+        }
+
         async function runSearch() {
             const raw = document.getElementById('search-input').value.trim();
             const status = document.getElementById('search-status');
             const results = document.getElementById('search-results');
             results.innerHTML = '';
+            lastSearch = raw;
             if (raw.length < 2) {
+                lastSearch = '';
                 status.textContent = 'Saisissez au moins 2 caractères.';
                 return;
             }
 
-            // 1) Référence directe ?
+            // 1) Référence précise ?
             const ref = parseReference(raw);
-            if (ref) {
+            if (ref && ref.error) {
+                status.textContent = ref.error;
+                return;
+            }
+            if (ref && ref.verse) return showReference(ref);
+            if (ref) {                       // livre + chapitre : on ouvre le lecteur
                 status.textContent = '';
-                return openChapter(ref.book, ref.chapter, ref.verse, 'bible-search');
+                return openChapter(ref.book, ref.chapter, null, 'bible-search');
             }
 
-            // 2) Recherche plein texte
-            const terms = normalize(raw).split(/\s+/).filter(t => t.length > 1);
-            if (!terms.length) {
+            // 2) Recherche mot à mot
+            const specs = parseTerms(raw).filter(s => s.words.join('').length > 1);
+            if (!specs.length) {
                 status.textContent = 'Saisissez au moins 2 caractères.';
                 return;
             }
 
+            // Un nom de livre seul : on propose de l'ouvrir en plus des versets.
+            const namedBook = findBook(raw, true);
             const books = scopeBooks();
             const progress = document.getElementById('search-progress');
             const fill = document.getElementById('progress-fill');
@@ -1553,6 +1743,7 @@
             }
             progress.style.display = 'none';
 
+            const matchers = buildMatchers(specs, searchMode);
             const found = [];
             const LIMIT = 400;
             for (const b of books) {
@@ -1562,16 +1753,30 @@
                     for (let v = 0; v < norm[c].length; v++) {
                         const text = norm[c][v];
                         let ok = true;
-                        for (const t of terms) { if (!text.includes(t)) { ok = false; break; } }
+                        for (const m of matchers) {
+                            // Le test rapide écarte l'immense majorité des versets
+                            // avant de payer le coût de l'expression régulière.
+                            if (text.indexOf(m.first) === -1 || !m.re.test(text)) { ok = false; break; }
+                        }
                         if (ok) found.push({ b: b.id, c: c + 1, v: v + 1, text: plain[c][v] });
                     }
                 }
                 if (found.length > 5000) break;
             }
 
+            const bookCard = namedBook
+                ? `<div class="result-item reference" onclick="openBook('${namedBook.id}','bible-search')">` +
+                  `<div class="result-ref">Livre</div>` +
+                  `<div class="result-text">Ouvrir ${escapeHtml(namedBook.n)} — ${namedBook.ch.length} chapitres</div></div>`
+                : '';
+
             if (!found.length) {
-                status.textContent = `Aucun résultat pour « ${raw} ».`;
-                results.innerHTML = '<div class="empty-state">Essayez un autre mot, ou une référence comme « Jn 3:16 ».</div>';
+                status.textContent = `Aucun verset ne contient ${specs.map(s => '« ' + s.label + ' »').join(' et ')}.`;
+                results.innerHTML = bookCard + '<div class="empty-state">' +
+                    (searchMode === 'exact'
+                        ? 'Les mots sont cherchés en entier. Essayez « ' + escapeHtml(specs[0].label) + '* » pour toutes les formes du mot, ou le filtre « Contient ».'
+                        : 'Essayez un autre mot, ou une référence comme « Jn 3:16 ».') +
+                    '</div>';
                 return;
             }
 
@@ -1579,14 +1784,12 @@
             status.textContent = `${found.length} verset${found.length > 1 ? 's' : ''} trouvé${found.length > 1 ? 's' : ''}` +
                 (found.length > LIMIT ? ` — les ${LIMIT} premiers sont affichés.` : '.');
 
-            const regexes = terms.map(accentRegex);
-            results.innerHTML = shown.map(r => {
-                let html = escapeHtml(r.text);
-                regexes.forEach(re => { html = html.replace(re, m => `<mark>${m}</mark>`); });
-                return `<div class="result-item" onclick="openChapter('${r.b}',${r.c},${r.v},'bible-search')">` +
-                       `<div class="result-ref">${refLabel(r.b, r.c, r.v)}</div>` +
-                       `<div class="result-text">${html}</div></div>`;
-            }).join('');
+            const highlighters = buildHighlighters(specs, searchMode);
+            results.innerHTML = bookCard + shown.map(r =>
+                `<div class="result-item" onclick="openChapter('${r.b}',${r.c},${r.v},'bible-search')">` +
+                `<div class="result-ref">${refLabel(r.b, r.c, r.v)}</div>` +
+                `<div class="result-text">${highlight(r.text, highlighters)}</div></div>`
+            ).join('');
         }
 
         // --- Verset du jour & lecture du jour ---

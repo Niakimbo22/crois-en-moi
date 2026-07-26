@@ -25,8 +25,15 @@ politique d'origine. Le chargement par script est le seul qui fonctionne à la
 fois dans l'application et sur le web.
 
 - Lecteur par chapitre, navigation continue d'un livre à l'autre, taille de texte réglable
-- Recherche plein texte insensible à la casse et aux accents, avec surlignage
-- Saisie directe d'une référence : `Jn 3:16`, `Matthieu 5 3`, `1 Co 13`, `Psaume 23`
+- Recherche mot à mot, insensible à la casse et aux accents, avec surlignage :
+  chaque mot est cherché **en entier** (« aime » ne ramène pas « aimerai », ni
+  « Jean » les versets sur « Jeanne »). Une `"expression entre guillemets"` est
+  cherchée telle quelle, `aim*` retrouve toutes les formes d'un mot, et le filtre
+  « Contient » revient à la recherche par morceaux de mots
+- Saisie directe d'une référence, en français comme en anglais : `Jn 3:16`,
+  `John 3:16`, `Matthieu 5 3`, `1 Co 13,4-7`, `I Corinthiens 13`, `Psaume 23`.
+  Le verset demandé s'affiche directement dans les résultats ; un chapitre seul
+  ouvre le lecteur
 - Signets, reprise de la lecture là où elle s'est arrêtée (stockage local)
 - Parcours de lecture continu des quatre Évangiles, un chapitre par jour
 
