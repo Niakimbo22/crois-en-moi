@@ -864,6 +864,14 @@
             return false;
         }
 
+        // Rythme des vérifications : au lancement, puis en continu tant que
+        // l'application reste ouverte, et à chaque retour au premier plan.
+        const UPDATE_POLL_MS = 5 * 60 * 1000;
+        const UPDATE_MIN_GAP_MS = 60 * 1000;
+        const PAGE_OPENED_AT = Date.now();
+        let lastUpdateCheck = 0;
+        let pendingWebVersion = null;
+
         function hasNativeAutoUpdate() {
             try {
                 return !!(window.Android && typeof window.Android.hasAutoUpdate === 'function'
@@ -871,20 +879,63 @@
             } catch (e) { return false; }
         }
 
+        // Vrai pour la version web ; faux pour la page chargée depuis les
+        // ressources de l'application Android (file:///android_asset/).
+        function isWebVersion() {
+            return location.protocol === 'http:' || location.protocol === 'https:';
+        }
+
+        async function fetchPublishedVersion() {
+            const resp = await fetch(VERSION_URL + "?t=" + Date.now(), { cache: 'no-store' });
+            const data = await resp.json();
+            return data && data.version ? String(data.version) : '';
+        }
+
+        // Version web : la page se recharge d'elle-même sur la nouvelle version.
+        // L'adresse porte le numéro publié, ce qui contourne tout cache.
+        function applyWebUpdate(published) {
+            pendingWebVersion = null;
+            location.replace(location.pathname + '?v=' + encodeURIComponent(published));
+        }
+
         async function checkForUpdate() {
-            // L'application se met à jour toute seule : rien à demander ici.
+            const now = Date.now();
+            if (now - lastUpdateCheck < UPDATE_MIN_GAP_MS) return;
+            lastUpdateCheck = now;
+
+            // Application Android : MainActivity télécharge et installe seule.
             if (hasNativeAutoUpdate()) return;
+
+            let published = '';
             try {
-                const resp = await fetch(VERSION_URL + "?t=" + Date.now());
-                const data = await resp.json();
-                if (data.version && isNewerVersion(data.version, APP_VERSION) &&
-                    window.Android && typeof window.Android.downloadAndInstall === 'function') {
-                    const overlay = document.getElementById('update-overlay');
-                    document.getElementById('update-version-label').textContent =
-                        `Version ${data.version} disponible — tu as la ${APP_VERSION}.`;
-                    overlay.style.display = 'flex';
-                }
-            } catch(e) { /* Pas de réseau ou fichier absent */ }
+                published = await fetchPublishedVersion();
+            } catch (e) { return; /* Hors ligne : on réessaiera au prochain tour. */ }
+            if (!published || !isNewerVersion(published, APP_VERSION)) return;
+
+            if (isWebVersion()) {
+                // Recharger tout de suite si l'utilisateur vient d'ouvrir la page,
+                // sinon attendre son retour pour ne pas couper une lecture.
+                if (now - PAGE_OPENED_AT < 15000 || document.hidden) applyWebUpdate(published);
+                else pendingWebVersion = published;
+                return;
+            }
+
+            // Ancienne WebView sans mise à jour native : on propose le téléchargement.
+            if (window.Android && typeof window.Android.downloadAndInstall === 'function') {
+                document.getElementById('update-version-label').textContent =
+                    `Version ${published} disponible — tu as la ${APP_VERSION}.`;
+                document.getElementById('update-overlay').style.display = 'flex';
+            }
+        }
+
+        function startUpdateWatcher() {
+            setTimeout(checkForUpdate, 3000);
+            setInterval(checkForUpdate, UPDATE_POLL_MS);
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) return;
+                if (pendingWebVersion) applyWebUpdate(pendingWebVersion);
+                else checkForUpdate();
+            });
         }
 
         function dismissUpdate() {
@@ -1656,8 +1707,8 @@
             // Mark home as active on load
             showScreen('home');
             setTimeout(closeSplash, 2500);
-            // Vérifier les mises à jour
-            setTimeout(checkForUpdate, 3000);
+            // Surveillance continue des mises à jour
+            startUpdateWatcher();
         };
     </script>
 </body>

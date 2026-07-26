@@ -40,6 +40,30 @@ les proposant est trouvée.
 
 ## Build
 
-Le workflow `.github/workflows/build-apk.yml` copie `index.html` et `bible/`
-dans `android/app/src/main/assets/`, puis produit l'APK. Le fichier
-`version.json` sert à proposer la mise à jour dans l'application.
+Le workflow `.github/workflows/build-apk.yml` se déclenche à chaque push sur
+`main`. Il incrémente la version, copie `index.html` et `bible/` dans
+`android/app/src/main/assets/`, produit l'APK et publie la release `latest`.
+
+## Mise à jour automatique
+
+Rien n'est à faire pour publier une nouvelle version : il suffit de pousser sur
+`main`.
+
+**Numérotation.** Dès qu'un push touche `index.html`, `bible/` ou `android/`, la
+CI incrémente `version.json` ainsi que la constante `APP_VERSION` et le pied de
+page dans `index.html`, puis recommite le tout. Le numéro n'est donc jamais à
+modifier à la main — c'est lui qui signale la nouveauté aux applications
+installées, et l'oublier revient à ne rien publier du tout.
+
+**Application Android.** `MainActivity` compare sa version à `version.json` au
+lancement, à chaque retour au premier plan et toutes les demi-heures. Quand une
+version plus récente existe, elle télécharge l'APK et l'installe. À partir
+d'Android 12, une application qui se met à jour elle-même peut demander à ce que
+la confirmation soit omise (`USER_ACTION_NOT_REQUIRED`) : l'installation se fait
+alors sans aucune intervention. Sur les versions antérieures, le système impose
+sa fenêtre de confirmation, affichée aussitôt.
+
+**Version web.** La page interroge `version.json` toutes les cinq minutes et à
+chaque retour d'onglet, puis se recharge d'elle-même sur la nouvelle version.
+L'adresse porte le numéro publié, ce qui écarte tout cache. Le rechargement est
+différé au retour de l'utilisateur pour ne pas couper une lecture en cours.

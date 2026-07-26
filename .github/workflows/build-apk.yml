@@ -32,12 +32,71 @@ jobs:
             git config user.name "GitHub Actions"
             git add android/debug.keystore
             git commit -m "ci: add consistent debug keystore for stable APK signing"
-            git push
+            git push origin HEAD:main
           else
             echo "Using existing keystore from repo."
           fi
           mkdir -p ~/.android
           cp android/debug.keystore ~/.android/debug.keystore
+
+      # L'application ne détecte une nouveauté que si le numéro de version
+      # change. Il est donc incrémenté ici, à chaque modification du contenu,
+      # plutôt que laissé à la main de qui édite l'application.
+      - name: Faut-il incrémenter la version ?
+        id: decide
+        run: |
+          if [ "${{ github.event_name }}" != "push" ]; then
+            echo "Déclenchement manuel : incrémentation."
+            echo "bump=yes" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "Point de comparaison indisponible : incrémentation."
+            echo "bump=yes" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
+          echo "Fichiers modifiés :"; echo "$CHANGED"
+          if echo "$CHANGED" | grep -qE '^(index\.html|bible/|android/)'; then
+            echo "bump=yes" >> $GITHUB_OUTPUT
+          else
+            echo "Aucun contenu applicatif touché : version inchangée."
+            echo "bump=no" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Incrémenter la version
+        if: steps.decide.outputs.bump == 'yes'
+        run: |
+          NEW=$(python3 - <<'PY'
+          import json, re, pathlib
+          path = pathlib.Path('version.json')
+          current = json.loads(path.read_text())['version']
+          parts = (str(current).split('.') + ['0'])[:2]
+          new = "%d.%d" % (int(parts[0]), int(parts[1]) + 1)
+          path.write_text(json.dumps({"version": new}) + "\n")
+
+          page = pathlib.Path('index.html')
+          text = page.read_text(encoding='utf-8')
+          text = re.sub(r'const APP_VERSION = "[^"]*"',
+                        'const APP_VERSION = "%s"' % new, text)
+          text = re.sub(r'(Crois en Moi — Version )[0-9][0-9.]*',
+                        lambda m: m.group(1) + new, text)
+          page.write_text(text, encoding='utf-8')
+          print(new)
+          PY
+          )
+          echo "Nouvelle version : $NEW"
+          grep -n 'const APP_VERSION' index.html
+          grep -n 'Crois en Moi — Version' index.html
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add version.json index.html
+          git commit -m "ci: version $NEW"
+          # Un push par GITHUB_TOKEN ne redéclenche pas le workflow : pas de boucle.
+          git push origin HEAD:main
+
       - name: Copy web app to Android assets
         run: |
           mkdir -p android/app/src/main/assets

@@ -44,13 +44,27 @@ public class MainActivity extends Activity {
         "https://github.com/Niakimbo22/crois-en-moi/releases/latest";
     private static final String INSTALL_ACTION = "com.croisenmoi.app.INSTALL_RESULT";
 
+    /** Sondage périodique tant que l'application reste ouverte. */
+    private static final long CHECK_INTERVAL_MS = 30 * 60 * 1000L;
+    /** Écart minimal entre deux sondages, retours au premier plan compris. */
+    private static final long MIN_CHECK_GAP_MS = 15 * 60 * 1000L;
+
     private WebView webView;
     private long pendingDownloadId = -1;
     private BroadcastReceiver downloadReceiver;
     private boolean updateInProgress = false;
     private boolean installLaunched = false;
     private boolean viewFallbackUsed = false;
+    private long lastCheckAt = 0;
     private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private final Runnable periodicCheck = new Runnable() {
+        @Override
+        public void run() {
+            checkForUpdate();
+            handler.postDelayed(this, CHECK_INTERVAL_MS);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +95,20 @@ public class MainActivity extends Activity {
         webView.loadUrl("file:///android_asset/index.html");
 
         handleInstallResult(getIntent());
-        // Laisse l'application s'ouvrir avant de sonder le serveur.
+        // Laisse l'application s'ouvrir avant de sonder le serveur, puis
+        // continue de surveiller tant qu'elle reste ouverte.
         handler.postDelayed(this::checkForUpdate, 2500);
+        handler.postDelayed(periodicCheck, CHECK_INTERVAL_MS);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Retour au premier plan : nouvelle occasion de rattraper une version.
+        // Le tout premier onResume suit immédiatement onCreate ; on laisse
+        // alors la vérification différée s'en charger, l'application s'ouvre
+        // sans attendre le réseau.
+        if (lastCheckAt != 0) checkForUpdate();
     }
 
     @Override
@@ -115,6 +141,10 @@ public class MainActivity extends Activity {
     // ------------------------------------------------- Détection d'une version
 
     private void checkForUpdate() {
+        if (updateInProgress) return;
+        long now = System.currentTimeMillis();
+        if (lastCheckAt != 0 && now - lastCheckAt < MIN_CHECK_GAP_MS) return;
+        lastCheckAt = now;
         new Thread(() -> {
             try {
                 HttpURLConnection connection = (HttpURLConnection)
@@ -271,8 +301,11 @@ public class MainActivity extends Activity {
 
     /**
      * Installe via PackageInstaller : l'APK est remis directement au système,
-     * sans passer par un fichier partagé. Android affiche alors sa fenêtre de
-     * confirmation, seule étape qu'une application ne peut pas contourner.
+     * sans passer par un fichier partagé. À partir d'Android 12, une application
+     * qui se met à jour elle-même peut demander à ce que la confirmation soit
+     * omise : l'installation se fait alors sans aucune intervention. Sur les
+     * versions antérieures, le système affiche sa fenêtre de confirmation, que
+     * handleInstallResult() présente immédiatement.
      */
     private void installUpdate(File apkFile) {
         if (installLaunched) return;
@@ -293,6 +326,14 @@ public class MainActivity extends Activity {
                 PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
                     PackageInstaller.SessionParams.MODE_FULL_INSTALL);
                 try { params.setAppPackageName(getPackageName()); } catch (Exception ignored) {}
+                if (Build.VERSION.SDK_INT >= 31) {
+                    // Mise à jour de soi-même : Android 12 et suivants acceptent
+                    // de se passer de la confirmation de l'utilisateur.
+                    try {
+                        params.setRequireUserAction(
+                            PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
+                    } catch (Exception ignored) {}
+                }
 
                 int sessionId = installer.createSession(params);
                 session = installer.openSession(sessionId);
